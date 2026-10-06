@@ -252,9 +252,16 @@ button {
   text-decoration: none;
 }
 
+.loginActions span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
 .loginActions button,
 .orderFooter button,
-.logoutButton {
+.logoutButton,
+.drawerActions button {
   border: 1px solid #111827;
   border-radius: var(--radius);
   background: #111827;
@@ -273,9 +280,30 @@ button {
 
 .loginActions button:hover,
 .orderFooter button:hover,
-.logoutButton:hover {
+.logoutButton:hover,
+.drawerActions button:hover {
   background: #000;
   transform: translateY(-1px);
+}
+
+.loginActions button:disabled,
+.drawerActions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
+.formError,
+.loadingText {
+  margin: 0;
+  color: #8a321e;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.loadingText {
+  margin-top: 28px;
+  color: var(--muted);
 }
 
 .dashboardPage {
@@ -302,6 +330,10 @@ button {
   gap: 10px;
 }
 
+.notificationWrap {
+  position: relative;
+}
+
 .iconButton,
 .profileBadge {
   width: 38px;
@@ -315,6 +347,32 @@ button {
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
+}
+
+.notificationPanel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 10;
+  width: min(280px, calc(100vw - 48px));
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.notificationPanel p {
+  margin: 0;
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+  color: #384152;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.notificationPanel p:last-child {
+  border-bottom: 0;
 }
 
 .logoutButton {
@@ -532,6 +590,12 @@ button {
   font-weight: 700;
 }
 
+.drawerHeader button:hover,
+.iconButton:hover {
+  border-color: #aeb7c2;
+  background: #f7f8fa;
+}
+
 .detailsGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -557,6 +621,18 @@ button {
   color: #2f3745;
   font-size: 14px;
   line-height: 1.65;
+}
+
+.drawerActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.drawerActions button {
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: 12px;
 }
 
 .emptyState {
