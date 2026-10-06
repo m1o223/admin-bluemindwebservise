@@ -32,7 +32,7 @@ type Order = {
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
-  "https://bluemind-web-service-api.onrender.com";
+  "https://bluemind-web-service-backend.onrender.com";
 
 function formatDate(value: string) {
   const date = new Date(value);
