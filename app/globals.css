@@ -356,7 +356,9 @@ a[role="button"] {
 .headerActions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .notificationWrap {
@@ -407,9 +409,9 @@ a[role="button"] {
 .presenceBlock {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 38px;
-  padding: 5px 8px;
+  gap: 12px;
+  min-height: 50px;
+  padding: 8px 10px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: #fafbfc;
@@ -426,18 +428,21 @@ a[role="button"] {
 .presenceList {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .presenceEmployee {
   display: grid;
-  grid-template-columns: auto auto;
-  gap: 2px 7px;
+  grid-template-columns: auto minmax(74px, 1fr) auto;
+  gap: 3px 10px;
   align-items: center;
-  min-height: 36px;
-  padding: 4px 8px 4px 4px;
-  border: 1px solid transparent;
-  border-radius: 999px;
+  min-height: 42px;
+  min-width: 154px;
+  padding: 7px 10px 7px 7px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
   opacity: 0.62;
   transition:
     border-color 180ms ease,
@@ -451,7 +456,7 @@ a[role="button"] {
 
 .presenceEmployee[data-current="true"] {
   border-color: #c8ced6;
-  background: #fff;
+  box-shadow: 0 8px 18px #1118270a;
 }
 
 .presenceAvatar {
@@ -473,6 +478,7 @@ a[role="button"] {
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .presenceStatus {
@@ -483,6 +489,7 @@ a[role="button"] {
   font-size: 10px;
   font-weight: 700;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .presenceStatus span {
@@ -497,6 +504,17 @@ a[role="button"] {
 }
 
 .presenceEmployee em {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  align-self: center;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 0 7px;
+  border: 1px solid #d9dee6;
+  border-radius: 999px;
+  background: #f7f8fa;
   color: #111827;
   font-size: 10px;
   font-style: normal;
@@ -507,6 +525,7 @@ a[role="button"] {
   height: 38px;
   padding: 0 14px;
   font-size: 12px;
+  margin-left: 2px;
 }
 
 .dashboardHero {
@@ -823,6 +842,15 @@ a[role="button"] {
     grid-template-columns: 1fr;
   }
 
+  .dashboardHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .headerActions {
+    justify-content: flex-start;
+  }
+
   .dashboardHero {
     align-items: start;
     flex-direction: column;
@@ -860,6 +888,7 @@ a[role="button"] {
   .presenceBlock {
     align-items: flex-start;
     flex-direction: column;
+    gap: 9px;
   }
 
   .presenceList {
@@ -869,9 +898,11 @@ a[role="button"] {
   }
 
   .presenceEmployee {
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     border-color: var(--line);
     border-radius: var(--radius);
+    width: 100%;
+    min-width: 0;
   }
 
   .presenceAvatar {
@@ -880,6 +911,7 @@ a[role="button"] {
 
   .logoutButton {
     flex: 1;
+    margin-left: 0;
   }
 
   .ordersToolbar input {
