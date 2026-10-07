@@ -375,11 +375,103 @@ button {
   border-bottom: 0;
 }
 
-.employeeName {
+.presenceBlock {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fafbfc;
+}
+
+.presenceTitle {
   color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.presenceList {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.presenceEmployee {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 2px 7px;
+  align-items: center;
+  min-height: 36px;
+  padding: 4px 8px 4px 4px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  opacity: 0.62;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    opacity 180ms ease;
+}
+
+.presenceEmployee[data-online="true"] {
+  opacity: 1;
+}
+
+.presenceEmployee[data-current="true"] {
+  border-color: #c8ced6;
+  background: #fff;
+}
+
+.presenceAvatar {
+  grid-row: span 2;
+  width: 28px;
+  height: 28px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: #fff;
+  color: #111827;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.presenceName {
+  color: #20242c;
   font-size: 12px;
-  font-weight: 650;
-  white-space: nowrap;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.presenceStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.presenceStatus span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #aeb6c1;
+}
+
+.presenceEmployee[data-online="true"] .presenceStatus span {
+  background: #2f8b57;
+}
+
+.presenceEmployee em {
+  color: #111827;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
 }
 
 .logoutButton {
@@ -732,6 +824,29 @@ button {
 
   .headerActions {
     width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .presenceBlock {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .presenceList {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .presenceEmployee {
+    grid-template-columns: auto 1fr auto;
+    border-color: var(--line);
+    border-radius: var(--radius);
+  }
+
+  .presenceAvatar {
+    grid-row: span 1;
   }
 
   .logoutButton {

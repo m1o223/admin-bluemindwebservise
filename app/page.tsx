@@ -11,13 +11,24 @@ type OrderStatus =
   | "Cancelled";
 type PaymentStatus = "Paid" | "Unpaid";
 
+type EmployeeId = "M" | "R";
+
 type AdminUser = {
   email: string;
-  employeeId: "M" | "R";
+  employeeId: EmployeeId;
+  displayName: string;
+};
+
+type EmployeePresence = {
+  employeeId: EmployeeId;
+  displayName: string;
+  online: boolean;
+  lastSeenAt: string | null;
 };
 
 type OrderActivity = {
-  employeeId: "M" | "R";
+  employeeId: EmployeeId;
+  displayName?: string;
   action: string;
   message: string;
   createdAt: string;
@@ -100,6 +111,11 @@ function StatusPill({ value }: { value: PaymentStatus | OrderStatus }) {
     </span>
   );
 }
+
+const DEFAULT_PRESENCE: EmployeePresence[] = [
+  { employeeId: "M", displayName: "Mohmed", online: false, lastSeenAt: null },
+  { employeeId: "R", displayName: "Rokaia", online: false, lastSeenAt: null },
+];
 
 function apiErrorMessage(status: number) {
   if (status === 401) return "Please sign in again to view admin orders.";
@@ -260,6 +276,7 @@ export default function Home() {
   const [signedIn, setSignedIn] = useState(false);
   const [admin, setAdmin] = useState<AdminUser | null>(null);
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [presence, setPresence] = useState<EmployeePresence[]>(DEFAULT_PRESENCE);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
@@ -277,6 +294,25 @@ export default function Home() {
     "Delivery date approaching",
   ]);
 
+
+
+  const sendHeartbeat = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/admin/presence/heartbeat`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        if (response.status === 401) setSignedIn(false);
+        return;
+      }
+      const data = (await response.json()) as { employees?: EmployeePresence[]; employee?: AdminUser };
+      if (data.employee) setAdmin(data.employee);
+      if (data.employees?.length) setPresence(data.employees);
+    } catch {
+      // Presence refresh will retry on the next heartbeat.
+    }
+  }, []);
   const fetchOrders = useCallback(async (query = "") => {
     setLoadingOrders(true);
     setOrdersError("");
@@ -311,12 +347,13 @@ export default function Home() {
         });
         if (!mounted) return;
         const data = response.ok
-          ? ((await response.json()) as { authenticated?: boolean; admin?: AdminUser | null })
+          ? ((await response.json()) as { authenticated?: boolean; admin?: AdminUser | null; employee?: AdminUser | null })
           : null;
         setSignedIn(Boolean(data?.authenticated));
-        setAdmin(data?.admin || null);
+        setAdmin(data?.employee || data?.admin || null);
         if (data?.authenticated) {
           void fetchOrders("");
+          void sendHeartbeat();
         }
       } catch {
         if (mounted) {
@@ -332,8 +369,24 @@ export default function Home() {
     return () => {
       mounted = false;
     };
-  }, [fetchOrders]);
+  }, [fetchOrders, sendHeartbeat]);
 
+
+  useEffect(() => {
+    if (!signedIn || !admin) return;
+    void sendHeartbeat();
+    const interval = window.setInterval(() => {
+      void sendHeartbeat();
+    }, 30000);
+    const handlePageHide = () => {
+      navigator.sendBeacon?.(`${API_URL}/api/admin/presence/heartbeat`);
+    };
+    window.addEventListener("pagehide", handlePageHide);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("pagehide", handlePageHide);
+    };
+  }, [admin, sendHeartbeat, signedIn]);
   useEffect(() => {
     if (!signedIn || !authChecked) return;
     const timeout = window.setTimeout(() => {
@@ -365,8 +418,9 @@ export default function Home() {
             : apiErrorMessage(response.status),
         );
       }
-      const data = (await response.json()) as { admin?: AdminUser };
-      setAdmin(data.admin || null);
+      const data = (await response.json()) as { admin?: AdminUser; employee?: AdminUser };
+      setAdmin(data.employee || data.admin || null);
+      await sendHeartbeat();
       setSignedIn(true);
       setPassword("");
       await fetchOrders("");
@@ -387,6 +441,7 @@ export default function Home() {
     setSelectedOrder(null);
     setOrders([]);
     setSearch("");
+    setPresence(DEFAULT_PRESENCE);
   }
 
   async function handleMarkReady(order: Order) {
@@ -414,8 +469,8 @@ export default function Home() {
       setSelectedOrder(data.order);
       setEvents((current) => [
         data.notification?.sent
-          ? `${admin?.employeeId || "Admin"} marked ${data.order.orderNumber} Ready and customer notification sent`
-          : `${admin?.employeeId || "Admin"} marked ${data.order.orderNumber} Ready`,
+          ? `${admin?.displayName || "Admin"} marked ${data.order.orderNumber} Ready and customer notification sent`
+          : `${admin?.displayName || "Admin"} marked ${data.order.orderNumber} Ready`,
         ...current,
       ]);
     } catch (error) {
@@ -534,10 +589,27 @@ export default function Home() {
               </div>
             )}
           </div>
-          <div className="profileBadge" aria-label="Signed in admin">
-            {admin?.employeeId || "BM"}
-          </div>
-          {admin && <span className="employeeName">Employee {admin.employeeId}</span>}
+          <section className="presenceBlock" aria-label="Employee presence">
+            <span className="presenceTitle">Employees</span>
+            <div className="presenceList">
+              {presence.map((employee) => (
+                <div
+                  className="presenceEmployee"
+                  data-online={employee.online}
+                  data-current={admin?.employeeId === employee.employeeId}
+                  key={employee.employeeId}
+                >
+                  <span className="presenceAvatar">{employee.employeeId}</span>
+                  <span className="presenceName">{employee.displayName}</span>
+                  <span className="presenceStatus">
+                    <span aria-hidden="true" />
+                    {employee.online ? "Online" : "Offline"}
+                  </span>
+                  {admin?.employeeId === employee.employeeId && <em>You</em>}
+                </div>
+              ))}
+            </div>
+          </section>
           <button type="button" className="logoutButton" onClick={handleLogout}>
             Logout
           </button>
@@ -547,7 +619,7 @@ export default function Home() {
       <section className="dashboardHero">
         <div>
           <p>Orders workspace</p>
-          <h1>Orders</h1>
+          <h1>{admin ? `Welcome back, ${admin.displayName}` : "Orders"}</h1>
         </div>
         <div className="dashboardStats" aria-label="Order summary">
           <span>{orderCountLabel}</span>
