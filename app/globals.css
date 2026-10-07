@@ -375,6 +375,13 @@ button {
   border-bottom: 0;
 }
 
+.employeeName {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
 .logoutButton {
   height: 38px;
   padding: 0 14px;
@@ -633,6 +640,41 @@ button {
   min-height: 40px;
   padding: 0 16px;
   font-size: 12px;
+}
+
+.activityList {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.activityList li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 8px;
+  align-items: center;
+  color: #2f3745;
+  font-size: 13px;
+}
+
+.activityList strong {
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: #fff;
+  color: #111827;
+  font-size: 11px;
+}
+
+.activityList small {
+  grid-column: 2;
+  color: var(--muted);
+  font-size: 11px;
 }
 
 .emptyState {

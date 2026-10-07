@@ -11,6 +11,18 @@ type OrderStatus =
   | "Cancelled";
 type PaymentStatus = "Paid" | "Unpaid";
 
+type AdminUser = {
+  email: string;
+  employeeId: "M" | "R";
+};
+
+type OrderActivity = {
+  employeeId: "M" | "R";
+  action: string;
+  message: string;
+  createdAt: string;
+};
+
 type Order = {
   id: string;
   orderNumber: string;
@@ -28,6 +40,7 @@ type Order = {
   deliveryDate: string;
   projectDescription: string;
   internalNotes?: string;
+  activity?: OrderActivity[];
 };
 
 const API_URL =
@@ -176,6 +189,7 @@ function DetailsDrawer({
     ["Delivery date", formatDate(order.deliveryDate)],
     ["Time remaining", getTimeRemaining(order.deliveryDate)],
   ];
+  const latestActivity = order.activity?.slice().reverse().slice(0, 4) || [];
 
   return (
     <div className="drawerOverlay" role="presentation" onClick={onClose}>
@@ -211,6 +225,22 @@ function DetailsDrawer({
           <span>Internal notes</span>
           <p>{order.internalNotes || "No internal notes yet."}</p>
         </section>
+        <section className="drawerSection">
+          <span>Order activity</span>
+          {latestActivity.length ? (
+            <ul className="activityList">
+              {latestActivity.map((item) => (
+                <li key={`${item.createdAt}-${item.action}`}>
+                  <strong>{item.employeeId}</strong>
+                  <span>{item.message}</span>
+                  <small>{formatDate(item.createdAt)}</small>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>No activity recorded yet.</p>
+          )}
+        </section>
         <div className="drawerActions">
           <button
             type="button"
@@ -228,6 +258,7 @@ function DetailsDrawer({
 export default function Home() {
   const [authChecked, setAuthChecked] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
+  const [admin, setAdmin] = useState<AdminUser | null>(null);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -279,12 +310,19 @@ export default function Home() {
           credentials: "include",
         });
         if (!mounted) return;
-        setSignedIn(response.ok);
-        if (response.ok) {
+        const data = response.ok
+          ? ((await response.json()) as { authenticated?: boolean; admin?: AdminUser | null })
+          : null;
+        setSignedIn(Boolean(data?.authenticated));
+        setAdmin(data?.admin || null);
+        if (data?.authenticated) {
           void fetchOrders("");
         }
       } catch {
-        if (mounted) setSignedIn(false);
+        if (mounted) {
+          setSignedIn(false);
+          setAdmin(null);
+        }
       } finally {
         if (mounted) setAuthChecked(true);
       }
@@ -327,6 +365,8 @@ export default function Home() {
             : apiErrorMessage(response.status),
         );
       }
+      const data = (await response.json()) as { admin?: AdminUser };
+      setAdmin(data.admin || null);
       setSignedIn(true);
       setPassword("");
       await fetchOrders("");
@@ -343,6 +383,7 @@ export default function Home() {
       credentials: "include",
     }).catch(() => undefined);
     setSignedIn(false);
+    setAdmin(null);
     setSelectedOrder(null);
     setOrders([]);
     setSearch("");
@@ -373,8 +414,8 @@ export default function Home() {
       setSelectedOrder(data.order);
       setEvents((current) => [
         data.notification?.sent
-          ? `Order ${data.order.orderNumber} marked Ready and customer notification sent`
-          : `Order ${data.order.orderNumber} marked Ready`,
+          ? `${admin?.employeeId || "Admin"} marked ${data.order.orderNumber} Ready and customer notification sent`
+          : `${admin?.employeeId || "Admin"} marked ${data.order.orderNumber} Ready`,
         ...current,
       ]);
     } catch (error) {
@@ -494,8 +535,9 @@ export default function Home() {
             )}
           </div>
           <div className="profileBadge" aria-label="Signed in admin">
-            BM
+            {admin?.employeeId || "BM"}
           </div>
+          {admin && <span className="employeeName">Employee {admin.employeeId}</span>}
           <button type="button" className="logoutButton" onClick={handleLogout}>
             Logout
           </button>
