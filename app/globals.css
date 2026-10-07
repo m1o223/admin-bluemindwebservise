@@ -46,6 +46,35 @@ button {
   cursor: pointer;
 }
 
+button,
+a[role="button"] {
+  transition:
+    transform 220ms cubic-bezier(.22, 1, .36, 1),
+    box-shadow 220ms ease,
+    background-color 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  button:not(:disabled):not([aria-disabled="true"]):hover,
+  a[role="button"]:hover {
+    transform: translateY(-2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  a[role="button"] {
+    transition: none !important;
+  }
+
+  button:hover,
+  a[role="button"]:hover {
+    transform: none !important;
+  }
+}
+
 .loginPage {
   min-height: 100vh;
   display: grid;
@@ -283,7 +312,7 @@ button {
 .logoutButton:hover,
 .drawerActions button:hover {
   background: #000;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .loginActions button:disabled,
