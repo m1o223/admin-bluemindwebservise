@@ -101,6 +101,22 @@ type Order = {
   isDemo?: boolean;
 };
 
+type CareSubscription = {
+  id: string;
+  orderNumber: string;
+  customerName?: string;
+  customerEmail: string;
+  planName: string;
+  billingInterval: "monthly" | "yearly";
+  price: string;
+  status: string;
+  paidThroughDate?: string;
+  nextRenewalDate?: string | null;
+  cancelAtPeriodEnd: boolean;
+  cancellation?: { reason?: string; reasonText?: string; requestedAt?: string; effectiveAt?: string };
+  testMode?: boolean;
+};
+
 const PROJECT_STATUSES: OrderStatus[] = [
   "Pending Review",
   "Awaiting Clarification",
@@ -247,6 +263,50 @@ function OrderCard({
           View Details
         </button>
       </div>
+    </article>
+  );
+}
+
+function CareSubscriptionCard({ subscription }: { subscription: CareSubscription }) {
+  return (
+    <article className="careCard">
+      <div className="orderCardTop">
+        <div>
+          <span className="orderNumber">
+            {subscription.orderNumber}
+            {subscription.testMode && <em>TEST</em>}
+          </span>
+          <h3>{subscription.planName}</h3>
+        </div>
+        <StatusPill value={(subscription.cancelAtPeriodEnd ? "Awaiting Final Payment" : "Confirmed") as OrderStatus} />
+      </div>
+      <div className="orderMeta">
+        <span>Customer</span>
+        <strong>{subscription.customerName || "Not provided"}</strong>
+        <span>Email</span>
+        <strong>{subscription.customerEmail}</strong>
+        <span>Billing</span>
+        <strong>{subscription.billingInterval}</strong>
+        <span>Status</span>
+        <strong>{subscription.cancelAtPeriodEnd ? "Renewal cancelled" : subscription.status}</strong>
+      </div>
+      <div className="orderSummary">
+        <div>
+          <span>Price</span>
+          <strong>{subscription.price}</strong>
+        </div>
+        <div>
+          <span>Next renewal</span>
+          <strong>{subscription.cancelAtPeriodEnd ? "Disabled" : formatDate(subscription.nextRenewalDate || "")}</strong>
+        </div>
+        <div>
+          <span>Paid through</span>
+          <strong>{formatDate(subscription.paidThroughDate || "")}</strong>
+        </div>
+      </div>
+      {subscription.cancellation?.reason && (
+        <p className="careCancellation">Cancellation reason: {subscription.cancellation.reason.replace(/_/g, " ")}</p>
+      )}
     </article>
   );
 }
@@ -490,6 +550,7 @@ export default function Home() {
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [orders, setOrders] = useState<Order[]>([]);
+  const [careSubscriptions, setCareSubscriptions] = useState<CareSubscription[]>([]);
   const [ordersError, setOrdersError] = useState("");
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -548,6 +609,27 @@ export default function Home() {
     }
   }, []);
 
+  const fetchCareSubscriptions = useCallback(async (query = "") => {
+    try {
+      const params = query.trim()
+        ? `?search=${encodeURIComponent(query.trim())}`
+        : "";
+      const response = await fetch(`${API_URL}/api/admin/care-subscriptions${params}`, {
+        credentials: "include",
+      });
+      if (response.status === 401) {
+        setSignedIn(false);
+        setCareSubscriptions([]);
+        return;
+      }
+      if (!response.ok) return;
+      const data = (await response.json()) as { subscriptions: CareSubscription[] };
+      setCareSubscriptions(data.subscriptions || []);
+    } catch {
+      // Orders remain the primary dashboard; subscription refresh retries with the next search/heartbeat cycle.
+    }
+  }, []);
+
   useEffect(() => {
     let mounted = true;
     async function checkSession() {
@@ -563,6 +645,7 @@ export default function Home() {
         setAdmin(data?.employee || data?.admin || null);
         if (data?.authenticated) {
           void fetchOrders("");
+          void fetchCareSubscriptions("");
           void sendHeartbeat();
         }
       } catch {
@@ -579,7 +662,7 @@ export default function Home() {
     return () => {
       mounted = false;
     };
-  }, [fetchOrders, sendHeartbeat]);
+  }, [fetchCareSubscriptions, fetchOrders, sendHeartbeat]);
 
 
   useEffect(() => {
@@ -601,9 +684,10 @@ export default function Home() {
     if (!signedIn || !authChecked) return;
     const timeout = window.setTimeout(() => {
       void fetchOrders(search);
+      void fetchCareSubscriptions(search);
     }, 250);
     return () => window.clearTimeout(timeout);
-  }, [authChecked, fetchOrders, search, signedIn]);
+  }, [authChecked, fetchCareSubscriptions, fetchOrders, search, signedIn]);
 
   useEffect(() => {
     if (!signedIn || directOrderOpened) return;
@@ -651,6 +735,7 @@ export default function Home() {
       setSignedIn(true);
       setPassword("");
       await fetchOrders("");
+      await fetchCareSubscriptions("");
     } catch (error) {
       setLoginError(error instanceof Error ? error.message : apiErrorMessage(500));
     } finally {
@@ -667,6 +752,7 @@ export default function Home() {
     setAdmin(null);
     setSelectedOrder(null);
     setOrders([]);
+    setCareSubscriptions([]);
     setSearch("");
     setPresence(DEFAULT_PRESENCE);
   }
@@ -948,6 +1034,20 @@ export default function Home() {
           placeholder="Search by order number, customer name, email, or company..."
         />
       </section>
+
+      {careSubscriptions.length > 0 && (
+        <section className="careSubscriptionsSection" aria-labelledby="care-subscriptions-title">
+          <div className="sectionHeader">
+            <p>BlueMind Care</p>
+            <h2 id="care-subscriptions-title">Active subscriptions</h2>
+          </div>
+          <div className="careGrid">
+            {careSubscriptions.map((subscription) => (
+              <CareSubscriptionCard key={subscription.id} subscription={subscription} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {ordersError && (
         <section className="emptyState" role="alert">
