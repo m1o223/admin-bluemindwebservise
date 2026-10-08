@@ -3,13 +3,27 @@
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 type OrderStatus =
+  | "Pending Review"
+  | "Awaiting Clarification"
+  | "Confirmed"
   | "New"
   | "In Progress"
+  | "Design Preview"
+  | "Revisions"
+  | "Final Review"
+  | "Awaiting Final Payment"
   | "Waiting for Client"
   | "Ready"
   | "Completed"
   | "Cancelled";
-type PaymentStatus = "Paid" | "Unpaid";
+type PaymentStatus =
+  | "Pending"
+  | "Paid"
+  | "Deposit Paid"
+  | "Partially Paid"
+  | "Final Balance Due"
+  | "Refunded"
+  | "Unpaid";
 
 type EmployeeId = "M" | "R";
 
@@ -27,10 +41,28 @@ type EmployeePresence = {
 };
 
 type OrderActivity = {
-  employeeId: EmployeeId;
+  employeeId: EmployeeId | "system";
   displayName?: string;
   action: string;
   message: string;
+  createdAt: string;
+};
+
+type NotificationState = {
+  type?: string;
+  status: "queued" | "pending" | "sent" | "delivered" | "failed";
+  reason?: string;
+  error?: string;
+  sentAt?: string;
+  updatedAt?: string;
+};
+
+type ClarificationRequest = {
+  requestId: string;
+  message: string;
+  employeeId: EmployeeId;
+  displayName: string;
+  status: string;
   createdAt: string;
 };
 
@@ -45,14 +77,42 @@ type Order = {
   service: string;
   package: string;
   price: string;
+  totalAmountOre?: number;
+  amountPaidOre?: number;
+  remainingBalanceOre?: number;
+  paymentOption?: "full" | "deposit";
+  paymentProvider?: string;
+  paymentReference?: string;
   paymentStatus: PaymentStatus;
   projectStatus: OrderStatus;
+  reviewStatus?: "pending_review" | "confirmed";
+  reviewedAt?: string | null;
+  reviewedBy?: { employeeId: EmployeeId; displayName: string } | null;
   orderDate: string;
   deliveryDate: string;
   projectDescription: string;
+  requestedFeatures?: string[];
+  websiteDetails?: Record<string, string>;
   internalNotes?: string;
+  notificationStatus?: Record<string, NotificationState>;
+  clarificationRequests?: ClarificationRequest[];
   activity?: OrderActivity[];
+  isPaidOrder?: boolean;
+  isDemo?: boolean;
 };
+
+const PROJECT_STATUSES: OrderStatus[] = [
+  "Pending Review",
+  "Awaiting Clarification",
+  "Confirmed",
+  "In Progress",
+  "Design Preview",
+  "Revisions",
+  "Final Review",
+  "Awaiting Final Payment",
+  "Completed",
+  "Cancelled",
+];
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
@@ -83,6 +143,11 @@ function getTimeRemaining(deliveryDate: string) {
   return `${Math.abs(days)} days overdue`;
 }
 
+function formatSekFromOre(value?: number) {
+  if (!Number.isInteger(value)) return "";
+  return `${new Intl.NumberFormat("sv-SE").format((value || 0) / 100)} SEK`;
+}
+
 function BlueMindMark() {
   return (
     <span className="brandMark" aria-hidden="true">
@@ -97,10 +162,14 @@ function BlueMindMark() {
 
 function StatusPill({ value }: { value: PaymentStatus | OrderStatus }) {
   const tone =
-    value === "Paid" || value === "Completed" || value === "Ready"
+    value === "Paid" || value === "Completed" || value === "Ready" || value === "Confirmed"
       ? "positive"
-      : value === "Unpaid" ||
+      : value === "Pending Review" ||
+          value === "Awaiting Clarification" ||
+          value === "Deposit Paid" ||
+          value === "Unpaid" ||
           value === "Waiting for Client" ||
+          value === "Awaiting Final Payment" ||
           value === "Cancelled"
         ? "attention"
         : "neutral";
@@ -134,7 +203,12 @@ function OrderCard({
     <article className="orderCard">
       <div className="orderCardTop">
         <div>
-          <span className="orderNumber">{order.orderNumber}</span>
+          <span className="orderNumber">
+            {order.orderNumber}
+            {order.reviewStatus !== "confirmed" && order.projectStatus === "Pending Review" && (
+              <em>NEW</em>
+            )}
+          </span>
           <h3>{order.projectType}</h3>
         </div>
         <StatusPill value={order.projectStatus} />
@@ -166,7 +240,7 @@ function OrderCard({
       <div className="orderFooter">
         <div>
           <span>Price</span>
-          <strong>{order.price}</strong>
+          <strong>{formatSekFromOre(order.totalAmountOre) || order.price}</strong>
         </div>
         <StatusPill value={order.paymentStatus} />
         <button type="button" onClick={() => onViewDetails(order)}>
@@ -181,14 +255,36 @@ function DetailsDrawer({
   order,
   busy,
   onClose,
-  onMarkReady,
+  onConfirmOrder,
+  onRequestClarification,
+  onUpdateStatus,
 }: {
   order: Order | null;
   busy: boolean;
   onClose: () => void;
-  onMarkReady: (order: Order) => void;
+  onConfirmOrder: (order: Order) => void;
+  onRequestClarification: (order: Order, message: string) => void;
+  onUpdateStatus: (order: Order, status: OrderStatus) => void;
 }) {
+  const [clarificationOpen, setClarificationOpen] = useState(false);
+  const [clarificationMessage, setClarificationMessage] = useState("");
+  const [clarificationConfirmed, setClarificationConfirmed] = useState(false);
+  const [nextStatus, setNextStatus] = useState<OrderStatus>("Pending Review");
+
+  useEffect(() => {
+    if (order) {
+      setClarificationOpen(false);
+      setClarificationMessage("");
+      setClarificationConfirmed(false);
+      setNextStatus(order.projectStatus);
+    }
+  }, [order]);
+
   if (!order) return null;
+
+  const isReviewPending = order.isPaidOrder && order.reviewStatus !== "confirmed";
+  const notificationRows = Object.entries(order.notificationStatus || {});
+  const clarificationRows = order.clarificationRequests || [];
 
   const detailRows = [
     ["Order number", order.orderNumber],
@@ -198,14 +294,19 @@ function DetailsDrawer({
     ["Phone", order.phone || "Not provided"],
     ["Service type", order.service],
     ["Package", order.package],
-    ["Price", order.price],
+    ["Total", formatSekFromOre(order.totalAmountOre) || order.price],
+    ["Paid", formatSekFromOre(order.amountPaidOre)],
+    ["Remaining", formatSekFromOre(order.remainingBalanceOre)],
+    ["Payment type", order.paymentOption === "deposit" ? "50% Deposit" : "Full"],
+    ["Stripe reference", order.paymentReference || "Not provided"],
     ["Payment status", order.paymentStatus],
-    ["Order status", order.projectStatus],
+    ["Project status", order.projectStatus],
+    ["Review status", order.reviewStatus === "confirmed" ? "Confirmed" : "Pending Review"],
     ["Order date", formatDate(order.orderDate)],
     ["Delivery date", formatDate(order.deliveryDate)],
     ["Time remaining", getTimeRemaining(order.deliveryDate)],
   ];
-  const latestActivity = order.activity?.slice().reverse().slice(0, 4) || [];
+  const latestActivity = order.activity?.slice().reverse().slice(0, 8) || [];
 
   return (
     <div className="drawerOverlay" role="presentation" onClick={onClose}>
@@ -234,9 +335,54 @@ function DetailsDrawer({
           ))}
         </div>
         <section className="drawerSection">
+          <span>Requested features</span>
+          <p>{order.requestedFeatures?.length ? order.requestedFeatures.join(", ") : "No features listed."}</p>
+        </section>
+        <section className="drawerSection">
           <span>Project description</span>
           <p>{order.projectDescription}</p>
         </section>
+        <section className="drawerSection">
+          <span>Review</span>
+          {order.reviewStatus === "confirmed" ? (
+            <p>
+              Confirmed by {order.reviewedBy?.displayName || "BlueMind"} on{" "}
+              {order.reviewedAt ? formatDate(order.reviewedAt) : "a previous date"}.
+            </p>
+          ) : (
+            <p>This paid order is waiting for an employee to review the requirements.</p>
+          )}
+        </section>
+        <section className="drawerSection">
+          <span>Notification delivery</span>
+          {notificationRows.length ? (
+            <ul className="activityList">
+              {notificationRows.map(([type, state]) => (
+                <li key={type}>
+                  <strong>{state.status[0]?.toUpperCase() || "N"}</strong>
+                  <span>{type.replace(/_/g, " ")}: {state.status}</span>
+                  <small>{state.sentAt || state.updatedAt ? formatDate(state.sentAt || state.updatedAt || "") : "No timestamp"}</small>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>No notification status recorded yet.</p>
+          )}
+        </section>
+        {clarificationRows.length > 0 && (
+          <section className="drawerSection">
+            <span>Clarification requests</span>
+            <ul className="activityList">
+              {clarificationRows.slice().reverse().map((item) => (
+                <li key={item.requestId}>
+                  <strong>{item.employeeId}</strong>
+                  <span>{item.message}</span>
+                  <small>{formatDate(item.createdAt)}</small>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         <section className="drawerSection">
           <span>Internal notes</span>
           <p>{order.internalNotes || "No internal notes yet."}</p>
@@ -257,15 +403,78 @@ function DetailsDrawer({
             <p>No activity recorded yet.</p>
           )}
         </section>
-        <div className="drawerActions">
+        <section className="drawerSection actionPanel">
+          <span>Project tracking</span>
+          <div className="statusUpdateRow">
+            <select
+              value={nextStatus}
+              onChange={(event) => setNextStatus(event.target.value as OrderStatus)}
+              aria-label="Project status"
+            >
+              {PROJECT_STATUSES.map((status) => (
+                <option value={status} key={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              disabled={busy || nextStatus === order.projectStatus}
+              onClick={() => onUpdateStatus(order, nextStatus)}
+            >
+              {busy ? "Updating..." : "Update Status"}
+            </button>
+          </div>
+        </section>
+        <div className="drawerActions stacked">
           <button
             type="button"
-            disabled={busy || order.projectStatus === "Ready"}
-            onClick={() => onMarkReady(order)}
+            disabled={busy || !isReviewPending}
+            onClick={() => onConfirmOrder(order)}
           >
-            {busy ? "Updating..." : "Mark Ready"}
+            {busy ? "Sending..." : order.reviewStatus === "confirmed" ? "Order Confirmed" : "Confirm Order & Notify Customer"}
+          </button>
+          <button
+            type="button"
+            className="secondaryAction"
+            disabled={busy || !order.isPaidOrder}
+            onClick={() => setClarificationOpen((open) => !open)}
+          >
+            Request Clarification
           </button>
         </div>
+        {clarificationOpen && (
+          <section className="clarificationBox">
+            <label>
+              <span>Message to {order.email}</span>
+              <textarea
+                value={clarificationMessage}
+                onChange={(event) => setClarificationMessage(event.target.value)}
+                placeholder="Write the specific details you need from the customer..."
+                rows={5}
+              />
+            </label>
+            <div className="clarificationPreview">
+              <span>Preview</span>
+              <p>{clarificationMessage || "Your message preview will appear here."}</p>
+            </div>
+            <label className="confirmSendRow">
+              <input
+                type="checkbox"
+                checked={clarificationConfirmed}
+                onChange={(event) => setClarificationConfirmed(event.target.checked)}
+              />
+              <span>I reviewed this message and want to send it to the customer.</span>
+            </label>
+            <button
+              type="button"
+              disabled={busy || clarificationMessage.trim().length < 5 || !clarificationConfirmed}
+              onClick={() => onRequestClarification(order, clarificationMessage)}
+            >
+              {busy ? "Sending..." : "Send Clarification Request"}
+            </button>
+          </section>
+        )}
       </aside>
     </div>
   );
@@ -288,6 +497,7 @@ export default function Home() {
   const [submittingLogin, setSubmittingLogin] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [directOrderOpened, setDirectOrderOpened] = useState(false);
   const [events, setEvents] = useState<string[]>([
     "New order received",
     "Payment received",
@@ -395,10 +605,27 @@ export default function Home() {
     return () => window.clearTimeout(timeout);
   }, [authChecked, fetchOrders, search, signedIn]);
 
+  useEffect(() => {
+    if (!signedIn || directOrderOpened) return;
+    const orderParam = new URLSearchParams(window.location.search).get("order");
+    if (!orderParam) return;
+    setSearch(orderParam);
+    const match = orders.find((order) => order.orderNumber === orderParam || order.orderNumber === `#${orderParam.replace(/^#/, "")}`);
+    if (match) {
+      setDirectOrderOpened(true);
+      void openOrderDetails(match);
+    }
+  }, [directOrderOpened, orders, signedIn]);
+
   const orderCountLabel = useMemo(() => {
     if (orders.length === 1) return "1 database order";
     return `${orders.length} database orders`;
   }, [orders.length]);
+
+  const pendingReviewCount = useMemo(
+    () => orders.filter((order) => order.isPaidOrder && order.reviewStatus !== "confirmed").length,
+    [orders],
+  );
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -444,7 +671,39 @@ export default function Home() {
     setPresence(DEFAULT_PRESENCE);
   }
 
-  async function handleMarkReady(order: Order) {
+  async function openOrderDetails(order: Order) {
+    setUpdatingStatus(true);
+    setOrdersError("");
+    try {
+      const response = await fetch(
+        `${API_URL}/api/admin/orders/${encodeURIComponent(order.orderNumber)}`,
+        { credentials: "include" },
+      );
+      if (!response.ok) throw new Error(apiErrorMessage(response.status));
+      const data = (await response.json()) as { order: Order };
+      setSelectedOrder(data.order);
+      setOrders((current) =>
+        current.map((item) =>
+          item.orderNumber === data.order.orderNumber ? data.order : item,
+        ),
+      );
+    } catch (error) {
+      setOrdersError(error instanceof Error ? error.message : apiErrorMessage(500));
+    } finally {
+      setUpdatingStatus(false);
+    }
+  }
+
+  function mergeUpdatedOrder(order: Order) {
+    setOrders((current) =>
+      current.map((item) =>
+        item.orderNumber === order.orderNumber ? order : item,
+      ),
+    );
+    setSelectedOrder(order);
+  }
+
+  async function handleUpdateStatus(order: Order, projectStatus: OrderStatus) {
     setUpdatingStatus(true);
     try {
       const response = await fetch(
@@ -453,7 +712,7 @@ export default function Home() {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ projectStatus: "Ready" }),
+          body: JSON.stringify({ projectStatus }),
         },
       );
       if (!response.ok) throw new Error(apiErrorMessage(response.status));
@@ -461,16 +720,69 @@ export default function Home() {
         order: Order;
         notification?: { attempted?: boolean; sent?: boolean };
       };
-      setOrders((current) =>
-        current.map((item) =>
-          item.orderNumber === data.order.orderNumber ? data.order : item,
-        ),
+      mergeUpdatedOrder(data.order);
+      setEvents((current) => [
+        `${admin?.displayName || "Admin"} changed ${data.order.orderNumber} to ${data.order.projectStatus}`,
+        ...current,
+      ]);
+    } catch (error) {
+      setOrdersError(error instanceof Error ? error.message : apiErrorMessage(500));
+    } finally {
+      setUpdatingStatus(false);
+    }
+  }
+
+  async function handleConfirmOrder(order: Order) {
+    setUpdatingStatus(true);
+    try {
+      const response = await fetch(
+        `${API_URL}/api/admin/orders/${encodeURIComponent(order.orderNumber)}/confirm`,
+        {
+          method: "POST",
+          credentials: "include",
+        },
       );
-      setSelectedOrder(data.order);
+      if (!response.ok) throw new Error(apiErrorMessage(response.status));
+      const data = (await response.json()) as {
+        order: Order;
+        notification?: { sent?: boolean; skipped?: boolean };
+      };
+      mergeUpdatedOrder(data.order);
       setEvents((current) => [
         data.notification?.sent
-          ? `${admin?.displayName || "Admin"} marked ${data.order.orderNumber} Ready and customer notification sent`
-          : `${admin?.displayName || "Admin"} marked ${data.order.orderNumber} Ready`,
+          ? `${admin?.displayName || "Admin"} confirmed ${data.order.orderNumber} and notified the customer`
+          : `${data.order.orderNumber} is already confirmed or notification is pending`,
+        ...current,
+      ]);
+    } catch (error) {
+      setOrdersError(error instanceof Error ? error.message : apiErrorMessage(500));
+    } finally {
+      setUpdatingStatus(false);
+    }
+  }
+
+  async function handleRequestClarification(order: Order, message: string) {
+    setUpdatingStatus(true);
+    try {
+      const response = await fetch(
+        `${API_URL}/api/admin/orders/${encodeURIComponent(order.orderNumber)}/clarification`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ message }),
+        },
+      );
+      if (!response.ok) throw new Error(apiErrorMessage(response.status));
+      const data = (await response.json()) as {
+        order: Order;
+        notification?: { sent?: boolean };
+      };
+      mergeUpdatedOrder(data.order);
+      setEvents((current) => [
+        data.notification?.sent
+          ? `${admin?.displayName || "Admin"} requested clarification for ${data.order.orderNumber}`
+          : `Clarification saved for ${data.order.orderNumber}; email delivery needs attention`,
         ...current,
       ]);
     } catch (error) {
@@ -623,6 +935,7 @@ export default function Home() {
         </div>
         <div className="dashboardStats" aria-label="Order summary">
           <span>{orderCountLabel}</span>
+          <span>{pendingReviewCount} pending review</span>
           <span>MongoDB connected</span>
         </div>
       </section>
@@ -656,7 +969,7 @@ export default function Home() {
             <OrderCard
               key={order.orderNumber}
               order={order}
-              onViewDetails={setSelectedOrder}
+              onViewDetails={openOrderDetails}
             />
           ))}
         </section>
@@ -673,7 +986,9 @@ export default function Home() {
         order={selectedOrder}
         busy={updatingStatus}
         onClose={() => setSelectedOrder(null)}
-        onMarkReady={handleMarkReady}
+        onConfirmOrder={handleConfirmOrder}
+        onRequestClarification={handleRequestClarification}
+        onUpdateStatus={handleUpdateStatus}
       />
     </main>
   );

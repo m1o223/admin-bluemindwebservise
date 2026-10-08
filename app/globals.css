@@ -33,7 +33,10 @@ body {
 }
 
 button,
-input {
+input,
+input[type="checkbox"],
+select,
+textarea {
   font: inherit;
 }
 
@@ -595,9 +598,27 @@ a[role="button"] {
 }
 
 .orderNumber {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   color: var(--muted);
   font-size: 12px;
   font-weight: 700;
+}
+
+.orderNumber em {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 0 7px;
+  border: 1px solid #eedaa5;
+  border-radius: 999px;
+  background: var(--attention);
+  color: var(--attention-ink);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.3px;
 }
 
 .orderCard h3 {
@@ -772,14 +793,139 @@ a[role="button"] {
 
 .drawerActions {
   display: flex;
+  gap: 10px;
   justify-content: flex-end;
   margin-top: 16px;
+}
+
+.drawerActions.stacked {
+  align-items: stretch;
+  flex-direction: column;
 }
 
 .drawerActions button {
   min-height: 40px;
   padding: 0 16px;
   font-size: 12px;
+}
+
+.drawerActions .secondaryAction,
+.statusUpdateRow button,
+.clarificationBox button {
+  border-color: var(--line-strong);
+  background: #fff;
+  color: #111827;
+}
+
+.drawerActions .secondaryAction:hover,
+.statusUpdateRow button:hover,
+.clarificationBox button:hover {
+  border-color: #111827;
+  background: #f7f8fa;
+}
+
+.actionPanel {
+  background: #fff;
+}
+
+.statusUpdateRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
+
+.statusUpdateRow select {
+  min-height: 40px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  color: #111827;
+  padding: 0 12px;
+}
+
+.clarificationBox {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fafbfc;
+}
+
+.clarificationBox label {
+  display: grid;
+  gap: 7px;
+}
+
+.clarificationBox .confirmSendRow {
+  display: flex;
+  align-items: start;
+  gap: 9px;
+  color: #384152;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.confirmSendRow input {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.clarificationBox label > span,
+.clarificationPreview span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.clarificationBox textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px;
+  color: #111827;
+  background: #fff;
+  line-height: 1.5;
+  outline: none;
+}
+
+.clarificationBox textarea:focus,
+.statusUpdateRow select:focus {
+  border-color: #111827;
+  box-shadow: 0 0 0 4px #1118270d;
+}
+
+.clarificationPreview {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  background: #fff;
+}
+
+.clarificationPreview p {
+  margin: 0;
+  color: #2f3745;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.clarificationBox button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .activityList {
@@ -921,7 +1067,8 @@ a[role="button"] {
 
   .orderMeta,
   .orderSummary,
-  .detailsGrid {
+  .detailsGrid,
+  .statusUpdateRow {
     grid-template-columns: 1fr;
   }
 
