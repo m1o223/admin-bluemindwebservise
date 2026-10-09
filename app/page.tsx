@@ -20,6 +20,8 @@ type PaymentStatus =
   | "Pending"
   | "Paid"
   | "Deposit Paid"
+  | "Test Paid"
+  | "Test Deposit Paid"
   | "Partially Paid"
   | "Final Balance Due"
   | "Refunded"
@@ -80,8 +82,10 @@ type Order = {
   totalAmountOre?: number;
   amountPaidOre?: number;
   remainingBalanceOre?: number;
-  paymentOption?: "full" | "deposit";
+  paymentOption?: "full" | "deposit" | "deposit_50" | "deposit_25";
   paymentProvider?: string;
+  paymentMode?: "test" | "live";
+  stripeLivemode?: boolean;
   paymentReference?: string;
   paymentStatus: PaymentStatus;
   projectStatus: OrderStatus;
@@ -98,6 +102,8 @@ type Order = {
   clarificationRequests?: ClarificationRequest[];
   activity?: OrderActivity[];
   isPaidOrder?: boolean;
+  isSandboxTestOrder?: boolean;
+  testMode?: string;
   isDemo?: boolean;
 };
 
@@ -183,6 +189,8 @@ function StatusPill({ value }: { value: PaymentStatus | OrderStatus }) {
       : value === "Pending Review" ||
           value === "Awaiting Clarification" ||
           value === "Deposit Paid" ||
+          value === "Test Paid" ||
+          value === "Test Deposit Paid" ||
           value === "Unpaid" ||
           value === "Waiting for Client" ||
           value === "Awaiting Final Payment" ||
@@ -221,6 +229,9 @@ function OrderCard({
         <div>
           <span className="orderNumber">
             {order.orderNumber}
+            {(order.isSandboxTestOrder || order.paymentMode === "test" || order.testMode) && (
+              <em>TEST</em>
+            )}
             {order.reviewStatus !== "confirmed" && order.projectStatus === "Pending Review" && (
               <em>NEW</em>
             )}
@@ -357,7 +368,8 @@ function DetailsDrawer({
     ["Total", formatSekFromOre(order.totalAmountOre) || order.price],
     ["Paid", formatSekFromOre(order.amountPaidOre)],
     ["Remaining", formatSekFromOre(order.remainingBalanceOre)],
-    ["Payment type", order.paymentOption === "deposit" ? "50% Deposit" : "Full"],
+    ["Payment type", order.paymentOption === "deposit_25" ? "25% Deposit" : order.paymentOption === "deposit" || order.paymentOption === "deposit_50" ? "50% Deposit" : "Full"],
+    ["Payment mode", order.isSandboxTestOrder || order.paymentMode === "test" || order.testMode ? "Stripe Sandbox TEST - not real revenue" : "Live payment"],
     ["Stripe reference", order.paymentReference || "Not provided"],
     ["Payment status", order.paymentStatus],
     ["Project status", order.projectStatus],
