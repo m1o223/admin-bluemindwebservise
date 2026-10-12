@@ -121,60 +121,16 @@ a[role="button"] {
 .brandMark {
   width: 42px;
   height: 42px;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex: 0 0 auto;
-  border: 1px solid #1f29371a;
-  border-radius: 50%;
-  background: #fff;
 }
 
-.planet {
-  width: 28px;
-  height: 28px;
-  position: relative;
+.brandMark img {
   display: block;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 32% 23%, #ffffff82 0 11%, transparent 12%),
-    linear-gradient(135deg, #2d3138, #050607 68%);
-  box-shadow: inset -5px -7px 10px #0008;
-  transform: rotate(-14deg);
-}
-
-.planetBand,
-.orbit {
-  position: absolute;
-  pointer-events: none;
-}
-
-.planetBand {
-  left: 4px;
-  right: 4px;
-  height: 4px;
-  border-radius: 999px;
-  background: #fff;
-  transform: rotate(-17deg);
-}
-
-.planetBandTop {
-  top: 8px;
-}
-
-.planetBandMid {
-  top: 17px;
-}
-
-.orbit {
-  width: 38px;
-  height: 12px;
-  left: -5px;
-  top: 8px;
-  border: 2px solid #111;
-  border-left-color: #1119;
-  border-bottom-color: #1119;
-  border-radius: 50%;
-  transform: rotate(-18deg);
+  width: 37px;
+  height: auto;
 }
 
 .loginIntro {

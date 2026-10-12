@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 type OrderStatus =
@@ -173,11 +174,7 @@ function formatSekFromOre(value?: number) {
 function BlueMindMark() {
   return (
     <span className="brandMark" aria-hidden="true">
-      <span className="planet">
-        <span className="planetBand planetBandTop" />
-        <span className="planetBand planetBandMid" />
-        <span className="orbit" />
-      </span>
+      <Image src="/images/brand/bluemind-original-logo-transparent.png" alt="" width={42} height={48} priority />
     </span>
   );
 }
@@ -897,7 +894,7 @@ export default function Home() {
           <div className="brandLockup">
             <BlueMindMark />
             <div>
-              <strong>BlueMind Web Service</strong>
+              <strong>BlueMind Workspace</strong>
               <span>Admin access</span>
             </div>
           </div>
@@ -914,7 +911,7 @@ export default function Home() {
           <div className="brandLockup">
             <BlueMindMark />
             <div>
-              <strong>BlueMind Web Service</strong>
+              <strong>BlueMind Workspace</strong>
               <span>Admin Access</span>
             </div>
           </div>
@@ -977,7 +974,7 @@ export default function Home() {
         <div className="brandLockup">
           <BlueMindMark />
           <div>
-            <strong>BlueMind Web Service</strong>
+            <strong>BlueMind Workspace</strong>
             <span>Employee dashboard</span>
           </div>
         </div>
