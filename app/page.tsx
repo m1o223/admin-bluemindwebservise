@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { AhmedDeveloperDashboard } from "./AhmedDeveloperDashboard";
+import { EmployeeWorkspaceDashboard } from "./EmployeeWorkspaceDashboard";
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 type OrderStatus =
@@ -981,24 +981,7 @@ export default function Home() {
   }
 
   if (admin?.access === "employee") {
-    if (admin.employeeId === "AHMED") {
-      return <AhmedDeveloperDashboard user={admin} onLogout={handleLogout} />;
-    }
-
-    return (
-      <main className="employeeWelcomePage">
-        <section className="employeeWelcomeCard" aria-labelledby="employee-welcome-title">
-          <div className="employeeWelcomeBrand">
-            <BlueMindMark />
-            <strong>BlueMind Workspace</strong>
-          </div>
-          <h1 id="employee-welcome-title">Welcome back, {admin.displayName}</h1>
-          <button type="button" className="logoutButton employeeLogout" onClick={handleLogout}>
-            Logout
-          </button>
-        </section>
-      </main>
-    );
+    return <EmployeeWorkspaceDashboard user={admin} onLogout={handleLogout} />;
   }
 
   return (

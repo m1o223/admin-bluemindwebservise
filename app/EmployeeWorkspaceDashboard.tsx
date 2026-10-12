@@ -5,7 +5,7 @@ import { type FormEvent, useEffect, useMemo, useState } from "react";
 type WorkspaceUser = {
   access?: "admin" | "employee";
   email: string;
-  employeeId: string;
+  employeeId: "AHMED" | "AMMAR" | "PATRICK" | string;
   displayName: string;
   title?: string;
 };
@@ -93,8 +93,101 @@ const API_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
   "https://bluemind-web-service-backend.onrender.com";
 
-const TABS = ["Dashboard", "My Tasks", "My Projects", "Messages", "Meetings", "My Files", "My Tools", "Schedule", "Work Session", "Profile"] as const;
-type Tab = (typeof TABS)[number];
+type EmployeeWorkspaceConfig = {
+  role: string;
+  sidebarLabel: string;
+  dashboardFocus: string;
+  taskLabel: string;
+  taskEmpty: string;
+  projectLabel: string;
+  projectEmpty: string;
+  designsTitle?: string;
+  designsText?: string;
+  codeTitle?: string;
+  codeText?: string;
+  buildsTitle?: string;
+  buildsText?: string;
+  feedbackTitle?: string;
+  feedbackText?: string;
+  submitTitle?: string;
+  submitText?: string;
+  tools: [string, string, string][];
+  tabs: readonly string[];
+};
+
+const EMPLOYEE_WORKSPACES: Record<string, EmployeeWorkspaceConfig> = {
+  AHMED: {
+    role: "iOS Developer",
+    sidebarLabel: "iOS Workspace",
+    dashboardFocus: "Assigned iOS work",
+    taskLabel: "iOS development tasks",
+    taskEmpty: "iOS development tasks assigned by management will appear here.",
+    projectLabel: "Assigned iOS applications",
+    projectEmpty: "Only iOS applications assigned to Ahmed will appear here.",
+    designsTitle: "Approved App Designs",
+    designsText: "Approved iPhone app designs, screen specifications, assets, and developer handoff notes will appear here when management assigns them.",
+    codeTitle: "Code & Repositories",
+    codeText: "Authorized iOS GitHub repositories will appear here. Repository access is managed by BlueMind Workspace.",
+    buildsTitle: "App Builds",
+    buildsText: "Development builds, TestFlight links, and testing instructions will appear here when configured.",
+    tools: [
+      ["GitHub", "Repository access for approved iOS development work.", "https://github.com/"],
+      ["VS Code", "Recommended editor for code review and shared project work.", "https://code.visualstudio.com/"],
+      ["Xcode", "Apple's iOS development environment.", "https://developer.apple.com/xcode/"],
+      ["Apple Developer", "iOS certificates, profiles, and app distribution when authorized.", "https://developer.apple.com/"],
+      ["Figma", "Approved iPhone app design handoff.", "https://figma.com/"],
+    ],
+    tabs: ["Dashboard", "My Tasks", "My Projects", "Designs", "Code & Repositories", "App Builds", "Messages", "Meetings", "Work Time", "My Tools", "My Profile"],
+  },
+  PATRICK: {
+    role: "Android Developer",
+    sidebarLabel: "Android Workspace",
+    dashboardFocus: "Assigned Android work",
+    taskLabel: "Android development tasks",
+    taskEmpty: "Android development tasks assigned by management will appear here.",
+    projectLabel: "Assigned Android applications",
+    projectEmpty: "Only Android applications assigned to Patrick Jane will appear here.",
+    designsTitle: "Approved Android Designs",
+    designsText: "Approved Android designs, screen specifications, assets, and developer handoff notes will appear here when management assigns them.",
+    codeTitle: "Code & Repositories",
+    codeText: "Authorized Android GitHub repositories will appear here. Repository access is managed by BlueMind Workspace.",
+    buildsTitle: "App Builds",
+    buildsText: "Android testing builds, internal testing links, and QA notes will appear here when configured.",
+    tools: [
+      ["GitHub", "Repository access for approved Android development work.", "https://github.com/"],
+      ["Android Studio", "Primary Android development environment.", "https://developer.android.com/studio"],
+      ["Google Play Console", "App testing and release management when authorized.", "https://play.google.com/console/"],
+      ["Firebase", "Approved Android testing and diagnostics tools when configured.", "https://firebase.google.com/"],
+      ["Figma", "Approved Android design handoff.", "https://figma.com/"],
+    ],
+    tabs: ["Dashboard", "My Tasks", "My Projects", "Designs", "Code & Repositories", "App Builds", "Messages", "Meetings", "Work Time", "My Tools", "My Profile"],
+  },
+  AMMAR: {
+    role: "UI/UX Designer",
+    sidebarLabel: "Design Workspace",
+    dashboardFocus: "Assigned design work",
+    taskLabel: "Assigned design tasks",
+    taskEmpty: "Website, iOS, and Android design tasks assigned by management will appear here.",
+    projectLabel: "Website, iOS, and Android design projects",
+    projectEmpty: "Only design projects assigned to Ammar will appear here.",
+    designsTitle: "Design Studio",
+    designsText: "Design files, Figma links, colors, typography notes, components, and approved brand assets will appear here when configured.",
+    feedbackTitle: "Design Feedback",
+    feedbackText: "Management feedback, requested changes, and review notes will appear here when a design is reviewed.",
+    submitTitle: "Submit Designs",
+    submitText: "Submit completed design work through an assigned task or approved Figma link. Secure file upload will be connected in a later step.",
+    tools: [
+      ["Figma", "Primary design workspace for approved website, iOS, and Android interfaces.", "https://figma.com/"],
+      ["FigJam", "Workshops, user flows, and design planning.", "https://figma.com/figjam/"],
+      ["Adobe Creative Cloud", "Visual assets when authorized by management.", "https://www.adobe.com/creativecloud.html"],
+      ["GitHub", "Design handoff references and issue links when authorized.", "https://github.com/"],
+      ["Google Fonts", "Typography references for approved design systems.", "https://fonts.google.com/"],
+    ],
+    tabs: ["Dashboard", "My Tasks", "My Projects", "Design Studio", "Design Feedback", "Submit Designs", "Messages", "Meetings", "Work Time", "My Tools", "My Profile"],
+  },
+};
+
+type Tab = string;
 
 function formatDate(value?: string | null) {
   if (!value) return "Not scheduled";
@@ -124,7 +217,8 @@ function WorkspaceLogo() {
   return <img className="workspaceLogo" src="/images/brand/bluemind-original-logo-transparent.png" alt="" />;
 }
 
-export function AhmedDeveloperDashboard({ user, onLogout }: { user: WorkspaceUser; onLogout: () => void }) {
+export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: WorkspaceUser; onLogout: () => void }) {
+  const config = EMPLOYEE_WORKSPACES[user.employeeId] || EMPLOYEE_WORKSPACES.AHMED;
   const [activeTab, setActiveTab] = useState<Tab>("Dashboard");
   const [overview, setOverview] = useState<WorkspaceOverview | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState("");
@@ -170,6 +264,10 @@ export function AhmedDeveloperDashboard({ user, onLogout }: { user: WorkspaceUse
   }
 
   useEffect(() => {
+    if (!config.tabs.includes(activeTab)) setActiveTab("Dashboard");
+  }, [activeTab, config.tabs]);
+
+  useEffect(() => {
     void refreshWorkspace();
   }, []);
 
@@ -201,7 +299,7 @@ export function AhmedDeveloperDashboard({ user, onLogout }: { user: WorkspaceUse
         body: JSON.stringify({ toId: "M", message }),
       });
       setMessage("");
-      setNotice("Message sent to Mohammed.");
+      setNotice("Message sent to management.");
       await refreshWorkspace();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send message.");
@@ -256,11 +354,11 @@ export function AhmedDeveloperDashboard({ user, onLogout }: { user: WorkspaceUse
           <WorkspaceLogo />
           <div>
             <strong>BlueMind Workspace</strong>
-            <span>Developer</span>
+            <span>{config.sidebarLabel}</span>
           </div>
         </div>
-        <nav className="developerNav" aria-label="Ahmed workspace sections">
-          {TABS.map((tab) => (
+        <nav className="developerNav" aria-label={`${user.displayName} workspace sections`}>
+          {config.tabs.map((tab) => (
             <button key={tab} type="button" data-active={activeTab === tab} onClick={() => setActiveTab(tab)}>
               {tab}
             </button>
@@ -272,15 +370,15 @@ export function AhmedDeveloperDashboard({ user, onLogout }: { user: WorkspaceUse
       <section className="developerMain">
         <header className="developerHeader">
           <div>
-            <p>{user.title || "Developer"}</p>
-            <h1>Welcome back, Ahmed</h1>
+            <p>{config.role}</p>
+            <h1>Welcome back, {user.displayName}</h1>
           </div>
           <span>Europe/Stockholm</span>
         </header>
 
         {notice && <p className="workspaceNotice">{notice}</p>}
         {error && <p className="workspaceError" role="alert">{error}</p>}
-        {loading && <EmptyState title="Loading workspace" text="Fetching Ahmed's assigned workspace data." />}
+        {loading && <EmptyState title="Loading workspace" text={`Fetching ${user.displayName}'s assigned workspace data.`} />}
 
         {!loading && activeTab === "Dashboard" && (
           <div className="developerSectionStack">
@@ -293,8 +391,8 @@ export function AhmedDeveloperDashboard({ user, onLogout }: { user: WorkspaceUse
               ))}
             </div>
             <section className="developerPanel">
-              <h2>Current focus</h2>
-              {selectedTask ? <TaskSummary task={selectedTask} /> : <EmptyState title="No task selected" text="Ahmed has no assigned tasks yet." />}
+              <h2>{config.dashboardFocus}</h2>
+              {selectedTask ? <TaskSummary task={selectedTask} /> : <EmptyState title="No task selected" text={`${user.displayName} has no assigned tasks yet.`} />}
             </section>
           </div>
         )}
@@ -308,10 +406,10 @@ export function AhmedDeveloperDashboard({ user, onLogout }: { user: WorkspaceUse
                   <strong>{task.title}</strong>
                   <span>{task.projectName} - {task.status}</span>
                 </button>
-              )) : <EmptyState title="No assigned tasks" text="Tasks assigned by management will appear here." />}
+              )) : <EmptyState title="No assigned tasks" text={config.taskEmpty} />}
             </div>
             <div className="developerPanel">
-              <h2>Task Details</h2>
+              <h2>{config.taskLabel}</h2>
               {selectedTask ? (
                 <div className="taskDetail">
                   <TaskSummary task={selectedTask} />
@@ -329,7 +427,7 @@ export function AhmedDeveloperDashboard({ user, onLogout }: { user: WorkspaceUse
                     <input value={githubLink} onChange={(event) => setGithubLink(event.target.value)} placeholder="https://github.com/..." />
                   </label>
                   <button type="button" onClick={() => updateTask("submit", { githubLink })}>Submit for Review</button>
-                  <p className="workspaceHelp">Ahmed can submit work for review, but cannot approve his own task.</p>
+                  <p className="workspaceHelp">{user.displayName} can submit work for review, but cannot approve their own task.</p>
                 </div>
               ) : <EmptyState title="No task open" text="Choose an assigned task to read instructions and submit work." />}
             </div>
@@ -339,15 +437,36 @@ export function AhmedDeveloperDashboard({ user, onLogout }: { user: WorkspaceUse
         {!loading && activeTab === "My Projects" && (
           <section className="developerPanel">
             <h2>My Projects</h2>
-            {overview?.projects.length ? overview.projects.map((project) => <ProjectCard project={project} key={project.id} />) : <EmptyState title="No assigned projects" text="Only projects assigned to Ahmed will appear here." />}
+            <p className="workspaceHelp">{config.projectLabel}</p>
+            {overview?.projects.length ? overview.projects.map((project) => <ProjectCard project={project} key={project.id} />) : <EmptyState title="No assigned projects" text={config.projectEmpty} />}
           </section>
+        )}
+
+        {!loading && (activeTab === "Designs" || activeTab === "Design Studio") && (
+          <WorkspaceInfoPanel title={config.designsTitle || activeTab} text={config.designsText || "Approved design files and specifications will appear here when configured."} />
+        )}
+
+        {!loading && activeTab === "Code & Repositories" && (
+          <WorkspaceInfoPanel title={config.codeTitle || "Code & Repositories"} text={config.codeText || "Authorized repositories will appear here when configured."} />
+        )}
+
+        {!loading && activeTab === "App Builds" && (
+          <WorkspaceInfoPanel title={config.buildsTitle || "App Builds"} text={config.buildsText || "Builds and testing links will appear here when configured."} />
+        )}
+
+        {!loading && activeTab === "Design Feedback" && (
+          <WorkspaceInfoPanel title={config.feedbackTitle || "Design Feedback"} text={config.feedbackText || "Feedback and requested changes will appear here when configured."} />
+        )}
+
+        {!loading && activeTab === "Submit Designs" && (
+          <WorkspaceInfoPanel title={config.submitTitle || "Submit Designs"} text={config.submitText || "Design submission tools will appear here when configured."} />
         )}
 
         {!loading && activeTab === "Messages" && (
           <section className="developerPanel">
             <h2>Messages</h2>
             <form className="workspaceForm" onSubmit={sendMessage}>
-              <label>Message Mohammed<textarea value={message} onChange={(event) => setMessage(event.target.value)} rows={4} placeholder="Write a project question or update..." /></label>
+              <label>Message management<textarea value={message} onChange={(event) => setMessage(event.target.value)} rows={4} placeholder="Write a project question or update..." /></label>
               <button type="submit">Send Message</button>
             </form>
             {overview?.messages.length ? overview.messages.map((item) => <p className="messageRow" key={item.id}><strong>{item.fromId}</strong>{item.body}<span>{formatDate(item.createdAt)}</span></p>) : <EmptyState title="No messages yet" text="Management messages and project conversations will appear here." />}
@@ -361,19 +480,10 @@ export function AhmedDeveloperDashboard({ user, onLogout }: { user: WorkspaceUse
           </section>
         )}
 
-        {!loading && activeTab === "My Files" && (
+        {!loading && activeTab === "My Tools" && <ToolsPanel tools={config.tools} />}
+        {!loading && activeTab === "Work Time" && (
           <section className="developerPanel">
-            <h2>My Files</h2>
-            {overview?.files.length ? overview.files.map((file) => <FileRow file={file} key={file.id} />) : <EmptyState title="No workspace files" text="Approved design files and submitted work files will appear here after secure file storage is connected." />}
-            <p className="workspaceHelp">File upload storage is not connected yet. Use the task GitHub link field for review submissions for now.</p>
-          </section>
-        )}
-
-        {!loading && activeTab === "My Tools" && <ToolsPanel />}
-        {!loading && activeTab === "Schedule" && <SchedulePanel meetings={overview?.meetings || []} tasks={overview?.tasks || []} />}
-        {!loading && activeTab === "Work Session" && (
-          <section className="developerPanel">
-            <h2>Work Session</h2>
+            <h2>Work Time</h2>
             <div className="workSessionControls">
               <button type="button" onClick={() => workAction("start")}>Start Work</button>
               <button type="button" className="secondaryAction" onClick={() => workAction("pause")}>Pause Work</button>
@@ -396,12 +506,12 @@ export function AhmedDeveloperDashboard({ user, onLogout }: { user: WorkspaceUse
           </section>
         )}
 
-        {!loading && activeTab === "Profile" && (
+        {!loading && activeTab === "My Profile" && (
           <section className="developerPanel">
             <h2>My Profile</h2>
             <dl className="profileGrid">
-              <div><dt>Full name</dt><dd>Ahmed</dd></div>
-              <div><dt>Job role</dt><dd>Developer</dd></div>
+              <div><dt>Full name</dt><dd>{user.displayName}</dd></div>
+              <div><dt>Job role</dt><dd>{config.role}</dd></div>
               <div><dt>Work email</dt><dd>{user.email}</dd></div>
               <div><dt>Preferred language</dt><dd>English</dd></div>
               <div><dt>Account settings</dt><dd>Managed by BlueMind Workspace</dd></div>
@@ -441,22 +551,16 @@ function MeetingCard({ meeting }: { meeting: WorkspaceMeeting }) {
   return <article className="projectCard"><h3>{meeting.purpose}</h3><p>{formatDate(meeting.startsAt)}</p><p>{meeting.participants.join(", ") || "Participants not listed"}</p>{meeting.joinUrl ? <a href={meeting.joinUrl} target="_blank" rel="noreferrer">Join Meeting</a> : <span>Join link not added yet</span>}</article>;
 }
 
-function FileRow({ file }: { file: WorkspaceFile }) {
-  return <article className="fileRow"><strong>{file.fileName}</strong><span>{file.projectName || "General"}</span><span>{formatDate(file.uploadedAt)}</span>{file.downloadUrl ? <a href={file.downloadUrl}>Download</a> : <em>No download link</em>}</article>;
+function WorkspaceInfoPanel({ title, text }: { title: string; text: string }) {
+  return (
+    <section className="developerPanel">
+      <h2>{title}</h2>
+      <EmptyState title="Not configured yet" text={text} />
+      <p className="workspaceHelp">This section is prepared for secure backend data. Nothing private is shown unless it is assigned to this employee.</p>
+    </section>
+  );
 }
 
-function ToolsPanel() {
-  const tools = [
-    ["GitHub", "Repository access for approved development work.", "https://github.com/"],
-    ["VS Code", "Recommended code editor for local development.", "https://code.visualstudio.com/"],
-    ["Vercel", "Frontend deployment visibility when authorized.", "https://vercel.com/"],
-    ["Render", "Backend deployment visibility when authorized.", "https://render.com/"],
-    ["Figma", "Approved design files and developer handoff.", "https://figma.com/"],
-  ];
+function ToolsPanel({ tools }: { tools: [string, string, string][] }) {
   return <section className="developerPanel"><h2>My Tools</h2><div className="toolsGrid">{tools.map(([name, description, href]) => <a href={href} target="_blank" rel="noreferrer" key={name}><strong>{name}</strong><span>{description}</span></a>)}</div><p className="workspaceHelp">No API keys, passwords, or administrator credentials are shown here.</p></section>;
-}
-
-function SchedulePanel({ meetings, tasks }: { meetings: WorkspaceMeeting[]; tasks: WorkspaceTask[] }) {
-  const deadlines = tasks.filter((task) => task.deadline).slice(0, 5);
-  return <section className="developerPanel"><h2>Schedule</h2><p className="workspaceHelp">Assigned hours use Europe/Stockholm unless management configures a different timezone.</p>{deadlines.length || meetings.length ? <div className="scheduleList">{deadlines.map((task) => <p key={task.taskId}><strong>{task.title}</strong><span>{formatDate(task.deadline)}</span></p>)}{meetings.map((meeting) => <p key={meeting.id}><strong>{meeting.purpose}</strong><span>{formatDate(meeting.startsAt)}</span></p>)}</div> : <EmptyState title="No scheduled work" text="Deadlines, planned work sessions, approved breaks, leave, and meetings will appear here when assigned." />}</section>;
 }
