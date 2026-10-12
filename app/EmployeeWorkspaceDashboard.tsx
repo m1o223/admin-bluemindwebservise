@@ -1,5 +1,19 @@
 ﻿"use client";
 
+import {
+  Clock,
+  Code2,
+  FolderKanban,
+  House,
+  ListTodo,
+  MessageSquare,
+  Package,
+  Palette,
+  UserRound,
+  Video,
+  Wrench,
+  type LucideIcon,
+} from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 
 type WorkspaceUser = {
@@ -190,6 +204,23 @@ const EMPLOYEE_WORKSPACES: Record<string, EmployeeWorkspaceConfig> = {
 
 type Tab = string;
 
+const WORKSPACE_NAV_ICONS: Record<string, LucideIcon> = {
+  Dashboard: House,
+  "My Tasks": ListTodo,
+  "My Projects": FolderKanban,
+  Designs: Palette,
+  "Design Studio": Palette,
+  "Design Feedback": Palette,
+  "Submit Designs": Palette,
+  "Code & Repositories": Code2,
+  "App Builds": Package,
+  Messages: MessageSquare,
+  Meetings: Video,
+  "Work Time": Clock,
+  "My Tools": Wrench,
+  "My Profile": UserRound,
+};
+
 function formatDate(value?: string | null) {
   if (!value) return "Not scheduled";
   const date = new Date(value);
@@ -359,11 +390,16 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
           </div>
         </div>
         <nav className="developerNav" aria-label={`${user.displayName} workspace sections`}>
-          {config.tabs.map((tab) => (
-            <button key={tab} type="button" data-active={activeTab === tab} onClick={() => setActiveTab(tab)}>
-              {tab}
-            </button>
-          ))}
+          {config.tabs.map((tab) => {
+            const Icon = WORKSPACE_NAV_ICONS[tab] ?? House;
+
+            return (
+              <button key={tab} type="button" data-active={activeTab === tab} onClick={() => setActiveTab(tab)}>
+                <Icon aria-hidden="true" />
+                <span>{tab}</span>
+              </button>
+            );
+          })}
         </nav>
         <button type="button" className="logoutButton developerLogout" onClick={onLogout}>Logout</button>
       </aside>
