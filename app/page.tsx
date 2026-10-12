@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { AhmedDeveloperDashboard } from "./AhmedDeveloperDashboard";
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 type OrderStatus =
@@ -980,6 +981,10 @@ export default function Home() {
   }
 
   if (admin?.access === "employee") {
+    if (admin.employeeId === "AHMED") {
+      return <AhmedDeveloperDashboard user={admin} onLogout={handleLogout} />;
+    }
+
     return (
       <main className="employeeWelcomePage">
         <section className="employeeWelcomeCard" aria-labelledby="employee-welcome-title">

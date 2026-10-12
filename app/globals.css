@@ -1151,3 +1151,443 @@ a[role="button"] {
     padding: 32px 22px;
   }
 }
+
+.developerWorkspacePage {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  background: #f7f9fb;
+  color: #111111;
+}
+
+.developerSidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 22px;
+  border-right: 1px solid var(--line);
+  background: #ffffff;
+}
+
+.developerBrand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.workspaceLogo {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+
+.developerBrand strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 750;
+}
+
+.developerBrand span,
+.developerHeader p,
+.workspaceHelp {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.developerNav {
+  display: grid;
+  gap: 7px;
+}
+
+.developerNav button {
+  min-height: 40px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: #111111;
+  text-align: left;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.developerNav button:hover,
+.developerNav button[data-active="true"] {
+  border-color: #d9e4f0;
+  background: #edf3fa;
+  transform: translateY(-1px);
+}
+
+.developerLogout {
+  margin-top: auto;
+}
+
+.developerMain {
+  min-width: 0;
+  padding: 24px;
+}
+
+.developerHeader {
+  width: min(1180px, 100%);
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.developerHeader p {
+  margin: 0 0 8px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.developerHeader h1 {
+  margin: 0;
+  font-size: clamp(34px, 5vw, 58px);
+  line-height: 1;
+  letter-spacing: -1.8px;
+}
+
+.developerHeader > span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.workspaceNotice,
+.workspaceError {
+  width: min(1180px, 100%);
+  margin: 0 auto 12px;
+  padding: 12px 14px;
+  border: 1px solid #cfe0d5;
+  border-radius: var(--radius);
+  background: #eef8f1;
+  color: #25523a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.workspaceError {
+  border-color: #f1d0c6;
+  background: #fff3ef;
+  color: #8a321e;
+}
+
+.developerSectionStack,
+.developerTwoColumn,
+.developerPanel {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.developerSectionStack {
+  display: grid;
+  gap: 16px;
+}
+
+.developerTwoColumn {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.2fr);
+  gap: 16px;
+}
+
+.developerMetricGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.developerMetricGrid.compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 14px 0;
+}
+
+.developerMetric,
+.developerPanel,
+.workspaceEmpty,
+.taskListItem,
+.projectCard,
+.fileRow {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+}
+
+.developerMetric {
+  min-height: 96px;
+  display: grid;
+  gap: 10px;
+  align-content: center;
+  padding: 16px;
+}
+
+.developerMetric span,
+.taskSummary dt,
+.profileGrid dt {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+.developerMetric strong {
+  color: #111111;
+  font-size: 22px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.developerPanel {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  box-shadow: 0 8px 24px #11182708;
+}
+
+.developerPanel h2,
+.workspaceForm h3 {
+  margin: 0;
+  font-size: 24px;
+  letter-spacing: -0.6px;
+}
+
+.workspaceEmpty {
+  padding: 24px;
+  text-align: center;
+}
+
+.workspaceEmpty h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.workspaceEmpty p,
+.taskSummary p,
+.projectCard p,
+.workspaceHelp {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.taskListItem {
+  display: grid;
+  gap: 5px;
+  padding: 14px;
+  text-align: left;
+}
+
+.taskListItem[data-active="true"] {
+  border-color: #142d4e;
+  background: #edf3fa;
+}
+
+.taskListItem strong,
+.projectCard h3,
+.taskSummary h3 {
+  color: #111111;
+  font-size: 16px;
+}
+
+.taskListItem span,
+.projectCard span,
+.fileRow span,
+.fileRow em,
+.messageRow span {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.taskDetail,
+.taskSummary,
+.workspaceForm,
+.profileGrid,
+.toolsGrid,
+.scheduleList {
+  display: grid;
+  gap: 12px;
+}
+
+.taskSummary dl,
+.profileGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.taskSummary dd,
+.profileGrid dd {
+  margin: 4px 0 0;
+  color: #111111;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.taskActions,
+.workSessionControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.developerPanel button,
+.workspaceForm button,
+.taskActions button,
+.workSessionControls button {
+  min-height: 40px;
+  border: 1px solid #142d4e;
+  border-radius: var(--radius);
+  background: #142d4e;
+  color: #ffffff;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.developerPanel button:hover,
+.workspaceForm button:hover,
+.taskActions button:hover,
+.workSessionControls button:hover {
+  transform: scale(.98);
+}
+
+.developerPanel .secondaryAction,
+.taskActions .secondaryAction,
+.workSessionControls .secondaryAction {
+  background: #ffffff;
+  color: #142d4e;
+}
+
+.developerPanel .secondaryAction:hover,
+.taskActions .secondaryAction:hover,
+.workSessionControls .secondaryAction:hover {
+  background: #edf3fa;
+}
+
+.workspaceForm label,
+.taskDetail label {
+  display: grid;
+  gap: 7px;
+  color: #111111;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.workspaceForm textarea,
+.taskDetail textarea,
+.taskDetail input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  color: #111111;
+  padding: 12px;
+  outline: none;
+  resize: vertical;
+}
+
+.workspaceForm textarea:focus,
+.taskDetail textarea:focus,
+.taskDetail input:focus {
+  border-color: #142d4e;
+  box-shadow: 0 0 0 4px #142d4e12;
+}
+
+.projectCard,
+.fileRow,
+.messageRow,
+.scheduleList p {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+}
+
+.messageRow {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fafbfc;
+  line-height: 1.5;
+}
+
+.toolsGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.toolsGrid a {
+  display: grid;
+  gap: 6px;
+  min-height: 96px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  color: #111111;
+  text-decoration: none;
+}
+
+.toolsGrid a:hover {
+  background: #edf3fa;
+  transform: translateY(-1px);
+}
+
+.toolsGrid span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+@media (max-width: 980px) {
+  .developerWorkspacePage {
+    grid-template-columns: 1fr;
+  }
+
+  .developerSidebar {
+    position: static;
+    height: auto;
+  }
+
+  .developerNav {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .developerNav button {
+    white-space: nowrap;
+  }
+
+  .developerMetricGrid,
+  .developerTwoColumn,
+  .toolsGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .developerMain,
+  .developerSidebar {
+    padding: 16px;
+  }
+
+  .developerHeader {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .developerMetricGrid,
+  .developerMetricGrid.compact,
+  .developerTwoColumn,
+  .toolsGrid,
+  .taskSummary dl,
+  .profileGrid {
+    grid-template-columns: 1fr;
+  }
+}
