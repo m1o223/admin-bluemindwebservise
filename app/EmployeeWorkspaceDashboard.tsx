@@ -231,7 +231,6 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
-  const previewMode = user.email === "preview@bluemind.local";
 
   const selectedTask = useMemo(
     () => overview?.tasks.find((task) => task.taskId === selectedTaskId) || overview?.tasks[0] || null,
@@ -251,30 +250,6 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
 
   async function refreshWorkspace() {
     setError("");
-    if (previewMode) {
-      const emptyOverview: WorkspaceOverview = {
-        summary: {
-          todayAssignedTasks: 0,
-          tasksInProgress: 0,
-          waitingForReview: 0,
-          activeProjects: 0,
-          upcomingDeadlines: [],
-          unreadMessages: 0,
-          nextMeeting: null,
-          todayWork: { activeMilliseconds: 0, breakMilliseconds: 0 },
-        },
-        tasks: [],
-        projects: [],
-        messages: [],
-        meetings: [],
-        files: [],
-      };
-      setOverview(emptyOverview);
-      setWorkSession(null);
-      setWorkSummary({ activeMilliseconds: 0, breakMilliseconds: 0 });
-      setLoading(false);
-      return;
-    }
     try {
       const data = await workspaceFetch<WorkspaceOverview>("/api/workspace/overview");
       setOverview(data);
@@ -317,11 +292,6 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
   async function sendMessage(event: FormEvent) {
     event.preventDefault();
     if (!message.trim()) return;
-    if (previewMode) {
-      setMessage("");
-      setNotice("Preview mode: message sending is disabled.");
-      return;
-    }
     setError("");
     try {
       await workspaceFetch("/api/workspace/messages", {
@@ -337,12 +307,6 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
   }
 
   async function workAction(action: "start" | "pause" | "resume" | "end") {
-    if (previewMode) {
-      const status = action === "pause" ? "paused" : action === "end" ? "ended" : "active";
-      setWorkSession(action === "end" ? null : { id: "preview-session", status, currentTaskId: selectedTask?.taskId || "", startedAt: new Date().toISOString(), activeMilliseconds: 0, breakMilliseconds: 0 });
-      setNotice(`Preview mode: work session ${action} shown locally only.`);
-      return;
-    }
     setError("");
     try {
       const data = await workspaceFetch<{ session: WorkSession; today: { activeMilliseconds: number; breakMilliseconds: number } }>("/api/workspace/work-session", {
@@ -359,11 +323,6 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
 
   async function sendCheckIn(event: FormEvent) {
     event.preventDefault();
-    if (previewMode) {
-      setCheckIn({ completed: "", workingOn: "", blockers: "" });
-      setNotice("Preview mode: progress check-in saved locally only.");
-      return;
-    }
     setError("");
     try {
       await workspaceFetch("/api/workspace/check-ins", {
@@ -418,7 +377,6 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
         </header>
 
         {notice && <p className="workspaceNotice">{notice}</p>}
-        {previewMode && <p className="workspaceNotice">Development preview mode. No real session, orders, customer data, or protected APIs are used.</p>}
         {error && <p className="workspaceError" role="alert">{error}</p>}
         {loading && <EmptyState title="Loading workspace" text={`Fetching ${user.displayName}'s assigned workspace data.`} />}
 

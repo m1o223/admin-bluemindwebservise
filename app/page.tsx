@@ -143,17 +143,6 @@ const PROJECT_STATUSES: OrderStatus[] = [
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
   "https://bluemind-web-service-backend.onrender.com";
-const DEVELOPMENT_PREVIEW_ENABLED =
-  process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_WORKSPACE_PREVIEW === "enabled";
-const PREVIEW_EMPLOYEES: Record<string, AdminUser> = {
-  ahmed: { access: "employee", email: "preview@bluemind.local", employeeId: "AHMED", displayName: "Ahmed", title: "iOS Developer" },
-  ammar: { access: "employee", email: "preview@bluemind.local", employeeId: "AMMAR", displayName: "Ammar", title: "UI/UX Designer" },
-  "patrick jane": { access: "employee", email: "preview@bluemind.local", employeeId: "PATRICK", displayName: "Patrick Jane", title: "Android Developer" },
-  patrick: { access: "employee", email: "preview@bluemind.local", employeeId: "PATRICK", displayName: "Patrick Jane", title: "Android Developer" },
-  mohammed: { access: "admin", email: "preview@bluemind.local", employeeId: "M", displayName: "Mohammed", title: "Admin Preview" },
-  mohmed: { access: "admin", email: "preview@bluemind.local", employeeId: "M", displayName: "Mohammed", title: "Admin Preview" },
-  rokaia: { access: "admin", email: "preview@bluemind.local", employeeId: "R", displayName: "Rokaia", title: "Admin Preview" },
-};
 
 function formatDate(value: string) {
   const date = new Date(value);
@@ -220,54 +209,6 @@ const DEFAULT_PRESENCE: EmployeePresence[] = [
   { employeeId: "M", displayName: "Mohmed", online: false, lastSeenAt: null },
   { employeeId: "R", displayName: "Rokaia", online: false, lastSeenAt: null },
 ];
-
-function AdminPreviewDashboard({ user, onLogout }: { user: AdminUser; onLogout: () => void }) {
-  const previewSections = [
-    ["Orders", "Real customer orders are hidden in preview mode."],
-    ["Employees", "Management tools will stay protected behind real authentication."],
-    ["Reviews", "Order confirmation and review controls are disabled in this preview."],
-    ["Notifications", "No emails, payment data, or customer records are loaded."],
-  ];
-
-  return (
-    <main className="dashboardPage">
-      <header className="dashboardHeader">
-        <div className="brandLockup">
-          <BlueMindMark />
-          <div>
-            <strong>BlueMind Workspace</strong>
-            <span>Development Admin Preview</span>
-          </div>
-        </div>
-        <button type="button" className="logoutButton" onClick={onLogout}>
-          Exit Preview
-        </button>
-      </header>
-      <section className="dashboardHero">
-        <div>
-          <span className="eyebrow">{user.title}</span>
-          <h1>Welcome back, {user.displayName}</h1>
-          <p>
-            This is a local development preview of the Admin UI. It does not create an authenticated session and does not load real orders, Stripe data, customer information, or protected APIs.
-          </p>
-        </div>
-      </section>
-      <section className="ordersGrid" aria-label="Admin preview sections">
-        {previewSections.map(([title, text]) => (
-          <article className="orderCard" key={title}>
-            <div className="orderCardTop">
-              <div>
-                <span className="orderNumber">PREVIEW</span>
-                <h3>{title}</h3>
-              </div>
-            </div>
-            <p className="detailText">{text}</p>
-          </article>
-        ))}
-      </section>
-    </main>
-  );
-}
 
 function apiErrorMessage(status: number) {
   if (status === 401) return "Please sign in again to view admin orders.";
@@ -615,7 +556,6 @@ export default function Home() {
   const [authChecked, setAuthChecked] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
   const [admin, setAdmin] = useState<AdminUser | null>(null);
-  const [previewMode, setPreviewMode] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [presence, setPresence] = useState<EmployeePresence[]>(DEFAULT_PRESENCE);
   const [email, setEmail] = useState("");
@@ -715,7 +655,6 @@ export default function Home() {
           ? ((await response.json()) as { authenticated?: boolean; admin?: AdminUser | null; employee?: AdminUser | null })
           : null;
         const user = data?.employee || data?.admin || null;
-        if (previewMode) return;
         setSignedIn(Boolean(data?.authenticated));
         setAdmin(user);
         if (data?.authenticated && user?.access !== "employee") {
@@ -737,11 +676,11 @@ export default function Home() {
     return () => {
       mounted = false;
     };
-  }, [fetchCareSubscriptions, fetchOrders, previewMode, sendHeartbeat]);
+  }, [fetchCareSubscriptions, fetchOrders, sendHeartbeat]);
 
 
   useEffect(() => {
-    if (previewMode || !signedIn || !admin || admin.access === "employee") return;
+    if (!signedIn || !admin || admin.access === "employee") return;
     void sendHeartbeat();
     const interval = window.setInterval(() => {
       void sendHeartbeat();
@@ -754,18 +693,18 @@ export default function Home() {
       window.clearInterval(interval);
       window.removeEventListener("pagehide", handlePageHide);
     };
-  }, [admin, previewMode, sendHeartbeat, signedIn]);
+  }, [admin, sendHeartbeat, signedIn]);
   useEffect(() => {
-    if (previewMode || !signedIn || !authChecked || !isAdminUser) return;
+    if (!signedIn || !authChecked || !isAdminUser) return;
     const timeout = window.setTimeout(() => {
       void fetchOrders(search);
       void fetchCareSubscriptions(search);
     }, 250);
     return () => window.clearTimeout(timeout);
-  }, [authChecked, fetchCareSubscriptions, fetchOrders, isAdminUser, previewMode, search, signedIn]);
+  }, [authChecked, fetchCareSubscriptions, fetchOrders, isAdminUser, search, signedIn]);
 
   useEffect(() => {
-    if (previewMode || !signedIn || !isAdminUser || directOrderOpened) return;
+    if (!signedIn || !isAdminUser || directOrderOpened) return;
     const orderParam = new URLSearchParams(window.location.search).get("order");
     if (!orderParam) return;
     setSearch(orderParam);
@@ -774,7 +713,7 @@ export default function Home() {
       setDirectOrderOpened(true);
       void openOrderDetails(match);
     }
-  }, [directOrderOpened, isAdminUser, orders, previewMode, signedIn]);
+  }, [directOrderOpened, isAdminUser, orders, signedIn]);
 
   const orderCountLabel = useMemo(() => {
     if (orders.length === 1) return "1 database order";
@@ -791,18 +730,6 @@ export default function Home() {
     setSubmittingLogin(true);
     setLoginError("");
     try {
-      const previewUser = PREVIEW_EMPLOYEES[email.trim().toLowerCase()];
-      if (DEVELOPMENT_PREVIEW_ENABLED && previewUser && !password.trim()) {
-        setPreviewMode(true);
-        setAdmin(previewUser);
-        setSignedIn(true);
-        setAuthChecked(true);
-        setPassword("");
-        setOrders([]);
-        setCareSubscriptions([]);
-        setPresence(DEFAULT_PRESENCE);
-        return;
-      }
       const response = await fetch(`${API_URL}/api/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -818,7 +745,6 @@ export default function Home() {
       }
       const data = (await response.json()) as { admin?: AdminUser | null; employee?: AdminUser | null };
       const user = data.employee || data.admin || null;
-      setPreviewMode(false);
       setAdmin(user);
       setSignedIn(true);
       setPassword("");
@@ -839,13 +765,10 @@ export default function Home() {
   }
 
   async function handleLogout() {
-    if (!previewMode) {
-      await fetch(`${API_URL}/api/admin/logout`, {
-        method: "POST",
-        credentials: "include",
-      }).catch(() => undefined);
-    }
-    setPreviewMode(false);
+    await fetch(`${API_URL}/api/admin/logout`, {
+      method: "POST",
+      credentials: "include",
+    }).catch(() => undefined);
     setSignedIn(false);
     setAdmin(null);
     setSelectedOrder(null);
@@ -1010,12 +933,12 @@ export default function Home() {
           </div>
           <form className="loginForm" onSubmit={handleLogin}>
             <label>
-              <span>{DEVELOPMENT_PREVIEW_ENABLED ? "Email or preview name" : "Email"}</span>
+              <span>Email</span>
               <input
-                type={DEVELOPMENT_PREVIEW_ENABLED ? "text" : "email"}
+                type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder={DEVELOPMENT_PREVIEW_ENABLED ? "Ahmed, Ammar, Patrick Jane, Mohammed, or Rokaia" : "admin@bluemindwebservice.com"}
+                placeholder="admin@bluemindwebservice.com"
                 autoComplete="username"
                 required
               />
@@ -1027,9 +950,9 @@ export default function Home() {
                   type={passwordVisible ? "text" : "password"}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  placeholder={DEVELOPMENT_PREVIEW_ENABLED ? "Leave empty for local preview" : "Enter password"}
+                  placeholder="Enter password"
                   autoComplete="current-password"
-                  required={!DEVELOPMENT_PREVIEW_ENABLED}
+                  required
                 />
                 <button
                   type="button"
@@ -1045,9 +968,6 @@ export default function Home() {
                 {loginError}
               </p>
             )}
-            {DEVELOPMENT_PREVIEW_ENABLED && (
-              <p className="workspaceHelp">Development preview only: type Ahmed, Ammar, Patrick Jane, Mohammed, or Rokaia and leave the password empty. No real session or protected data will be loaded.</p>
-            )}
             <div className="loginActions">
               <span>Authorized employees only</span>
               <button type="submit" disabled={submittingLogin}>
@@ -1062,10 +982,6 @@ export default function Home() {
 
   if (admin?.access === "employee") {
     return <EmployeeWorkspaceDashboard user={admin} onLogout={handleLogout} />;
-  }
-
-  if (previewMode && admin) {
-    return <AdminPreviewDashboard user={admin} onLogout={handleLogout} />;
   }
 
   return (
