@@ -28,12 +28,14 @@ type PaymentStatus =
   | "Refunded"
   | "Unpaid";
 
-type EmployeeId = "M" | "R";
+type EmployeeId = "M" | "R" | "AHMED" | "AMMAR" | "PATRICK";
 
 type AdminUser = {
+  access?: "admin" | "employee";
   email: string;
   employeeId: EmployeeId;
   displayName: string;
+  title?: string;
 };
 
 type EmployeePresence = {
@@ -573,6 +575,7 @@ export default function Home() {
     "Payment received",
     "Delivery date approaching",
   ]);
+  const isAdminUser = admin?.access !== "employee";
 
 
 
@@ -650,9 +653,10 @@ export default function Home() {
         const data = response.ok
           ? ((await response.json()) as { authenticated?: boolean; admin?: AdminUser | null; employee?: AdminUser | null })
           : null;
+        const user = data?.employee || data?.admin || null;
         setSignedIn(Boolean(data?.authenticated));
-        setAdmin(data?.employee || data?.admin || null);
-        if (data?.authenticated) {
+        setAdmin(user);
+        if (data?.authenticated && user?.access !== "employee") {
           void fetchOrders("");
           void fetchCareSubscriptions("");
           void sendHeartbeat();
@@ -675,7 +679,7 @@ export default function Home() {
 
 
   useEffect(() => {
-    if (!signedIn || !admin) return;
+    if (!signedIn || !admin || admin.access === "employee") return;
     void sendHeartbeat();
     const interval = window.setInterval(() => {
       void sendHeartbeat();
@@ -690,16 +694,16 @@ export default function Home() {
     };
   }, [admin, sendHeartbeat, signedIn]);
   useEffect(() => {
-    if (!signedIn || !authChecked) return;
+    if (!signedIn || !authChecked || !isAdminUser) return;
     const timeout = window.setTimeout(() => {
       void fetchOrders(search);
       void fetchCareSubscriptions(search);
     }, 250);
     return () => window.clearTimeout(timeout);
-  }, [authChecked, fetchCareSubscriptions, fetchOrders, search, signedIn]);
+  }, [authChecked, fetchCareSubscriptions, fetchOrders, isAdminUser, search, signedIn]);
 
   useEffect(() => {
-    if (!signedIn || directOrderOpened) return;
+    if (!signedIn || !isAdminUser || directOrderOpened) return;
     const orderParam = new URLSearchParams(window.location.search).get("order");
     if (!orderParam) return;
     setSearch(orderParam);
@@ -708,7 +712,7 @@ export default function Home() {
       setDirectOrderOpened(true);
       void openOrderDetails(match);
     }
-  }, [directOrderOpened, orders, signedIn]);
+  }, [directOrderOpened, isAdminUser, orders, signedIn]);
 
   const orderCountLabel = useMemo(() => {
     if (orders.length === 1) return "1 database order";
@@ -738,13 +742,20 @@ export default function Home() {
             : apiErrorMessage(response.status),
         );
       }
-      const data = (await response.json()) as { admin?: AdminUser; employee?: AdminUser };
-      setAdmin(data.employee || data.admin || null);
-      await sendHeartbeat();
+      const data = (await response.json()) as { admin?: AdminUser | null; employee?: AdminUser | null };
+      const user = data.employee || data.admin || null;
+      setAdmin(user);
       setSignedIn(true);
       setPassword("");
-      await fetchOrders("");
-      await fetchCareSubscriptions("");
+      if (user?.access !== "employee") {
+        await sendHeartbeat();
+        await fetchOrders("");
+        await fetchCareSubscriptions("");
+      } else {
+        setOrders([]);
+        setCareSubscriptions([]);
+        setPresence(DEFAULT_PRESENCE);
+      }
     } catch (error) {
       setLoginError(error instanceof Error ? error.message : apiErrorMessage(500));
     } finally {
@@ -963,6 +974,23 @@ export default function Home() {
               </button>
             </div>
           </form>
+        </section>
+      </main>
+    );
+  }
+
+  if (admin?.access === "employee") {
+    return (
+      <main className="employeeWelcomePage">
+        <section className="employeeWelcomeCard" aria-labelledby="employee-welcome-title">
+          <div className="employeeWelcomeBrand">
+            <BlueMindMark />
+            <strong>BlueMind Workspace</strong>
+          </div>
+          <h1 id="employee-welcome-title">Welcome back, {admin.displayName}</h1>
+          <button type="button" className="logoutButton employeeLogout" onClick={handleLogout}>
+            Logout
+          </button>
         </section>
       </main>
     );
