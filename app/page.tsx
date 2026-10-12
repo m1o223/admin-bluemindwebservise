@@ -37,6 +37,7 @@ type AdminUser = {
   employeeId: EmployeeId;
   displayName: string;
   title?: string;
+  requiresPasswordChange?: boolean;
 };
 
 type EmployeePresence = {

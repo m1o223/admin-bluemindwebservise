@@ -8,6 +8,7 @@ type WorkspaceUser = {
   employeeId: "AHMED" | "AMMAR" | "PATRICK" | string;
   displayName: string;
   title?: string;
+  requiresPasswordChange?: boolean;
 };
 
 type WorkspaceTask = {
@@ -377,6 +378,7 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
         </header>
 
         {notice && <p className="workspaceNotice">{notice}</p>}
+        {user.requiresPasswordChange && <p className="workspaceNotice">Temporary password active. Change the password before this account is used as a real employee account.</p>}
         {error && <p className="workspaceError" role="alert">{error}</p>}
         {loading && <EmptyState title="Loading workspace" text={`Fetching ${user.displayName}'s assigned workspace data.`} />}
 
