@@ -110,6 +110,17 @@ type WorkspaceOverview = {
   files: WorkspaceFile[];
 };
 
+type WorkspaceTool = {
+  id: string;
+  name: string;
+  description: string;
+  iconUrl: string;
+  openUrl: string;
+  downloadUrl?: string;
+  workAccountEmail?: string;
+  enabled?: boolean;
+};
+
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
   "https://bluemind-web-service-backend.onrender.com";
@@ -132,7 +143,6 @@ type EmployeeWorkspaceConfig = {
   feedbackText?: string;
   submitTitle?: string;
   submitText?: string;
-  tools: [string, string, string][];
   tabs: readonly string[];
 };
 
@@ -151,13 +161,6 @@ const EMPLOYEE_WORKSPACES: Record<string, EmployeeWorkspaceConfig> = {
     codeText: "Authorized iOS GitHub repositories will appear here. Repository access is managed by BlueMind Workspace.",
     buildsTitle: "App Builds",
     buildsText: "Development builds, TestFlight links, and testing instructions will appear here when configured.",
-    tools: [
-      ["GitHub", "Repository access for approved iOS development work.", "https://github.com/"],
-      ["VS Code", "Recommended editor for code review and shared project work.", "https://code.visualstudio.com/"],
-      ["Xcode", "Apple's iOS development environment.", "https://developer.apple.com/xcode/"],
-      ["Apple Developer", "iOS certificates, profiles, and app distribution when authorized.", "https://developer.apple.com/"],
-      ["Figma", "Approved iPhone app design handoff.", "https://figma.com/"],
-    ],
     tabs: ["Dashboard", "My Tasks", "My Projects", "Designs", "Code & Repositories", "App Builds", "Messages", "Meetings", "Work Time", "My Tools", "My Profile"],
   },
   PATRICK: {
@@ -174,13 +177,6 @@ const EMPLOYEE_WORKSPACES: Record<string, EmployeeWorkspaceConfig> = {
     codeText: "Authorized Android GitHub repositories will appear here. Repository access is managed by BlueMind Workspace.",
     buildsTitle: "App Builds",
     buildsText: "Android testing builds, internal testing links, and QA notes will appear here when configured.",
-    tools: [
-      ["GitHub", "Repository access for approved Android development work.", "https://github.com/"],
-      ["Android Studio", "Primary Android development environment.", "https://developer.android.com/studio"],
-      ["Google Play Console", "App testing and release management when authorized.", "https://play.google.com/console/"],
-      ["Firebase", "Approved Android testing and diagnostics tools when configured.", "https://firebase.google.com/"],
-      ["Figma", "Approved Android design handoff.", "https://figma.com/"],
-    ],
     tabs: ["Dashboard", "My Tasks", "My Projects", "Designs", "Code & Repositories", "App Builds", "Messages", "Meetings", "Work Time", "My Tools", "My Profile"],
   },
   AMMAR: {
@@ -197,13 +193,6 @@ const EMPLOYEE_WORKSPACES: Record<string, EmployeeWorkspaceConfig> = {
     feedbackText: "Management feedback, requested changes, and review notes will appear here when a design is reviewed.",
     submitTitle: "Submit Designs",
     submitText: "Submit completed design work through an assigned task or approved Figma link. Secure file upload will be connected in a later step.",
-    tools: [
-      ["Figma", "Primary design workspace for approved website, iOS, and Android interfaces.", "https://figma.com/"],
-      ["FigJam", "Workshops, user flows, and design planning.", "https://figma.com/figjam/"],
-      ["Adobe Creative Cloud", "Visual assets when authorized by management.", "https://www.adobe.com/creativecloud.html"],
-      ["GitHub", "Design handoff references and issue links when authorized.", "https://github.com/"],
-      ["Google Fonts", "Typography references for approved design systems.", "https://fonts.google.com/"],
-    ],
     tabs: ["Dashboard", "My Tasks", "My Projects", "Design Studio", "Design Feedback", "Submit Designs", "Messages", "Meetings", "Work Time", "My Tools", "My Profile"],
   },
 };
@@ -269,6 +258,10 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
   const [checkIn, setCheckIn] = useState({ completed: "", workingOn: "", blockers: "" });
   const [workSession, setWorkSession] = useState<WorkSession>(null);
   const [workSummary, setWorkSummary] = useState({ activeMilliseconds: 0, breakMilliseconds: 0 });
+  const [tools, setTools] = useState<WorkspaceTool[]>([]);
+  const [toolsLoading, setToolsLoading] = useState(false);
+  const [toolsLoaded, setToolsLoaded] = useState(false);
+  const [toolsError, setToolsError] = useState("");
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -304,6 +297,20 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
     }
   }
 
+  async function loadTools() {
+    setToolsLoading(true);
+    setToolsLoaded(true);
+    setToolsError("");
+    try {
+      const data = await workspaceFetch<{ tools: WorkspaceTool[] }>("/api/workspace/tools");
+      setTools(Array.isArray(data.tools) ? data.tools : []);
+    } catch {
+      setToolsError("Unable to load your tools. Please try again.");
+    } finally {
+      setToolsLoading(false);
+    }
+  }
+
   useEffect(() => {
     if (!config.tabs.includes(activeTab)) setActiveTab("Dashboard");
   }, [activeTab, config.tabs]);
@@ -311,6 +318,12 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
   useEffect(() => {
     void refreshWorkspace();
   }, []);
+
+  useEffect(() => {
+    if (!loading && activeTab === "My Tools" && !toolsLoaded && !toolsLoading) {
+      void loadTools();
+    }
+  }, [activeTab, loading, toolsLoaded, toolsLoading]);
 
   function selectWorkspaceTab(tab: Tab) {
     setActiveTab(tab);
@@ -586,7 +599,7 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
           </section>
         )}
 
-        {!loading && activeTab === "My Tools" && <ToolsPanel tools={config.tools} />}
+        {!loading && activeTab === "My Tools" && <ToolsPanel tools={tools} loading={toolsLoading} error={toolsError} onRetry={() => void loadTools()} />}
         {!loading && activeTab === "Work Time" && (
           <section className="developerPanel">
             <h2>Work Time</h2>
@@ -667,6 +680,53 @@ function WorkspaceInfoPanel({ title, text }: { title: string; text: string }) {
   );
 }
 
-function ToolsPanel({ tools }: { tools: [string, string, string][] }) {
-  return <section className="developerPanel"><h2>My Tools</h2><div className="toolsGrid">{tools.map(([name, description, href]) => <a href={href} target="_blank" rel="noreferrer" key={name}><strong>{name}</strong><span>{description}</span></a>)}</div><p className="workspaceHelp">No API keys, passwords, or administrator credentials are shown here.</p></section>;
+function ToolsPanel({ tools, loading, error, onRetry }: { tools: WorkspaceTool[]; loading: boolean; error: string; onRetry: () => void }) {
+  return (
+    <section className="developerPanel">
+      <div className="panelIntro">
+        <h2>My Tools</h2>
+        <p>Apps and tools you use for your daily work</p>
+      </div>
+
+      {loading && (
+        <div className="toolsGrid" aria-label="Loading tools">
+          {[1, 2, 3].map((item) => <div className="toolCard toolCardSkeleton" key={item} />)}
+        </div>
+      )}
+
+      {!loading && error && (
+        <div className="workspaceErrorState">
+          <EmptyState title="Unable to load your tools" text="Please try again." />
+          <button type="button" className="secondaryAction" onClick={onRetry}>Retry</button>
+        </div>
+      )}
+
+      {!loading && !error && !tools.length && (
+        <EmptyState title="No tools assigned yet" text="Your work tools will appear here when they are assigned to your role." />
+      )}
+
+      {!loading && !error && tools.length > 0 && (
+        <div className="toolsGrid">
+          {tools.map((tool) => (
+            <article className="toolCard" key={tool.id}>
+              <div className="toolIconFrame" aria-hidden="true">
+                {tool.iconUrl ? <img src={tool.iconUrl} alt="" loading="lazy" /> : <span>{tool.name.slice(0, 2).toUpperCase()}</span>}
+              </div>
+              <div className="toolDetails">
+                <h3>{tool.name}</h3>
+                <p>{tool.description}</p>
+                {tool.workAccountEmail && <small>Work Account <strong>{tool.workAccountEmail}</strong></small>}
+              </div>
+              <div className="toolActions">
+                <a href={tool.openUrl} target="_blank" rel="noopener noreferrer">Open</a>
+                {tool.downloadUrl && <a href={tool.downloadUrl} target="_blank" rel="noopener noreferrer" className="secondaryAction">Download</a>}
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+
+      <p className="workspaceHelp">No passwords, API keys, server tools, database tools, or administrator credentials are shown here.</p>
+    </section>
+  );
 }
