@@ -148,6 +148,7 @@ const API_URL =
 
 type EmployeeWorkspaceConfig = {
   role: string;
+  roleKey: "ios" | "android" | "design";
   sidebarLabel: string;
   dashboardFocus: string;
   taskLabel: string;
@@ -167,15 +168,16 @@ type EmployeeWorkspaceConfig = {
   tabs: readonly string[];
 };
 
-const EMPLOYEE_WORKSPACES: Record<string, EmployeeWorkspaceConfig> = {
-  AHMED: {
+const EMPLOYEE_WORKSPACES: Record<EmployeeWorkspaceConfig["roleKey"], EmployeeWorkspaceConfig> = {
+  ios: {
     role: "iOS Developer",
+    roleKey: "ios",
     sidebarLabel: "iOS Workspace",
     dashboardFocus: "Assigned iOS work",
     taskLabel: "iOS development tasks",
     taskEmpty: "iOS development tasks assigned by management will appear here.",
     projectLabel: "Assigned iOS applications",
-    projectEmpty: "Only iOS applications assigned to Ahmed will appear here.",
+    projectEmpty: "Only iOS applications assigned to this employee will appear here.",
     designsTitle: "Approved App Designs",
     designsText: "Approved iPhone app designs, screen specifications, assets, and developer handoff notes will appear here when management assigns them.",
     codeTitle: "Code & Repositories",
@@ -184,14 +186,15 @@ const EMPLOYEE_WORKSPACES: Record<string, EmployeeWorkspaceConfig> = {
     buildsText: "Development builds, TestFlight links, and testing instructions will appear here when configured.",
     tabs: ["Dashboard", "My Tasks", "My Projects", "Designs", "Code & Repositories", "App Builds", "Messages", "Meetings", "My Schedule", "Work Time", "My Tools", "My Profile"],
   },
-  PATRICK: {
+  android: {
     role: "Android Developer",
+    roleKey: "android",
     sidebarLabel: "Android Workspace",
     dashboardFocus: "Assigned Android work",
     taskLabel: "Android development tasks",
     taskEmpty: "Android development tasks assigned by management will appear here.",
     projectLabel: "Assigned Android applications",
-    projectEmpty: "Only Android applications assigned to Patrick Jane will appear here.",
+    projectEmpty: "Only Android applications assigned to this employee will appear here.",
     designsTitle: "Approved Android Designs",
     designsText: "Approved Android designs, screen specifications, assets, and developer handoff notes will appear here when management assigns them.",
     codeTitle: "Code & Repositories",
@@ -200,14 +203,15 @@ const EMPLOYEE_WORKSPACES: Record<string, EmployeeWorkspaceConfig> = {
     buildsText: "Android testing builds, internal testing links, and QA notes will appear here when configured.",
     tabs: ["Dashboard", "My Tasks", "My Projects", "Designs", "Code & Repositories", "App Builds", "Messages", "Meetings", "My Schedule", "Work Time", "My Tools", "My Profile"],
   },
-  AMMAR: {
+  design: {
     role: "UI/UX Designer",
+    roleKey: "design",
     sidebarLabel: "Design Workspace",
     dashboardFocus: "Assigned design work",
     taskLabel: "Assigned design tasks",
     taskEmpty: "Website, iOS, and Android design tasks assigned by management will appear here.",
     projectLabel: "Website, iOS, and Android design projects",
-    projectEmpty: "Only design projects assigned to Ammar will appear here.",
+    projectEmpty: "Only design projects assigned to this employee will appear here.",
     designsTitle: "Design Studio",
     designsText: "Design files, Figma links, colors, typography notes, components, and approved brand assets will appear here when configured.",
     feedbackTitle: "Design Feedback",
@@ -217,6 +221,13 @@ const EMPLOYEE_WORKSPACES: Record<string, EmployeeWorkspaceConfig> = {
     tabs: ["Dashboard", "My Tasks", "My Projects", "Design Studio", "Design Feedback", "Submit Designs", "Messages", "Meetings", "My Schedule", "Work Time", "My Tools", "My Profile"],
   },
 };
+
+function getWorkspaceRoleKey(user: WorkspaceUser): EmployeeWorkspaceConfig["roleKey"] {
+  const title = String(user.title || "").toLowerCase();
+  if (title.includes("android")) return "android";
+  if (title.includes("design") || title.includes("ui/ux")) return "design";
+  return "ios";
+}
 
 type Tab = string;
 
@@ -292,7 +303,7 @@ function WorkspaceLogo() {
 }
 
 export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: WorkspaceUser; onLogout: () => void }) {
-  const config = EMPLOYEE_WORKSPACES[user.employeeId] || EMPLOYEE_WORKSPACES.AHMED;
+  const config = EMPLOYEE_WORKSPACES[getWorkspaceRoleKey(user)];
   const [activeTab, setActiveTab] = useState<Tab>("Dashboard");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
