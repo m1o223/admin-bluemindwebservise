@@ -1133,22 +1133,26 @@ function ToolsPanel({ tools, loading, error, onRetry }: { tools: WorkspaceTool[]
 
       {!loading && !error && tools.length > 0 && (
         <div className="toolsGrid">
-          {tools.map((tool) => (
-            <article className="toolCard" key={tool.id}>
-              <div className="toolIconFrame" aria-hidden="true">
-                {tool.iconUrl ? <img src={tool.iconUrl} alt="" loading="lazy" /> : <span>{tool.name.slice(0, 2).toUpperCase()}</span>}
-              </div>
-              <div className="toolDetails">
-                <h3>{tool.name}</h3>
-                <p>{tool.description}</p>
-                {tool.workAccountEmail && <small>Work Account <strong>{tool.workAccountEmail}</strong></small>}
-              </div>
-              <div className="toolActions">
-                <a href={tool.openUrl} target="_blank" rel="noopener noreferrer">Open</a>
-                {tool.downloadUrl && <a href={tool.downloadUrl} target="_blank" rel="noopener noreferrer" className="secondaryAction">Download</a>}
-              </div>
-            </article>
-          ))}
+          {tools.map((tool) => {
+            const iconUrl = tool.id === "android-studio" ? "/images/tools/android-studio.svg" : tool.iconUrl;
+
+            return (
+              <article className="toolCard" key={tool.id}>
+                <div className="toolIconFrame" aria-hidden="true">
+                  {iconUrl ? <img src={iconUrl} alt="" loading="lazy" /> : <span>{tool.name.slice(0, 2).toUpperCase()}</span>}
+                </div>
+                <div className="toolDetails">
+                  <h3>{tool.name}</h3>
+                  <p>{tool.description}</p>
+                  {tool.workAccountEmail && <small>Work Account <strong>{tool.workAccountEmail}</strong></small>}
+                </div>
+                <div className="toolActions">
+                  <a href={tool.openUrl} target="_blank" rel="noopener noreferrer">Open</a>
+                  {tool.downloadUrl && <a href={tool.downloadUrl} target="_blank" rel="noopener noreferrer" className="secondaryAction">Download</a>}
+                </div>
+              </article>
+            );
+          })}
         </div>
       )}
 
