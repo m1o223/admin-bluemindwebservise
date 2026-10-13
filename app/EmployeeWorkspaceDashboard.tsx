@@ -18,7 +18,8 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type WorkspaceNotification, WorkspaceNotificationCenter } from "./WorkspaceNotificationCenter";
 
 type WorkspaceUser = {
   access?: "admin" | "employee";
@@ -258,6 +259,8 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
   const [activeTab, setActiveTab] = useState<Tab>("Dashboard");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [notifications, setNotifications] = useState<WorkspaceNotification[]>([]);
+  const overviewCountsRef = useRef<{ unreadMessages: number; assignedTasks: number } | null>(null);
   const [overview, setOverview] = useState<WorkspaceOverview | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState("");
   const [message, setMessage] = useState("");
@@ -379,6 +382,13 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
     }
   }
 
+  const unreadMessageCount = overview?.summary.unreadMessages ?? 0;
+
+  function addWorkspaceNotification(notification: Omit<WorkspaceNotification, "id">) {
+    const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    setNotifications((current) => [{ id, autoDismissMs: 5000, ...notification }, ...current].slice(0, 5));
+  }
+
   const summaryCards = [
     ["Today's assigned tasks", overview?.summary.todayAssignedTasks ?? 0],
     ["Tasks in progress", overview?.summary.tasksInProgress ?? 0],
@@ -390,8 +400,44 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
     ["Today's working time", formatDuration(workSummary.activeMilliseconds || overview?.summary.todayWork.activeMilliseconds || 0)],
   ];
 
+  useEffect(() => {
+    addWorkspaceNotification({ title: `Welcome back, ${user.displayName}!` });
+  }, [user.displayName]);
+
+  useEffect(() => {
+    if (!overview) return;
+
+    const currentCounts = {
+      unreadMessages: overview.summary.unreadMessages,
+      assignedTasks: overview.summary.todayAssignedTasks,
+    };
+    const previousCounts = overviewCountsRef.current;
+    overviewCountsRef.current = currentCounts;
+
+    if (!previousCounts) return;
+
+    if (currentCounts.unreadMessages > previousCounts.unreadMessages) {
+      addWorkspaceNotification({
+        title: currentCounts.unreadMessages === 1 ? "New message" : "New messages",
+        message: `${currentCounts.unreadMessages} unread message${currentCounts.unreadMessages === 1 ? "" : "s"}`,
+        actionLabel: "Open messages",
+        onClick: () => selectWorkspaceTab("Messages"),
+      });
+    }
+
+    if (currentCounts.assignedTasks > previousCounts.assignedTasks) {
+      addWorkspaceNotification({
+        title: currentCounts.assignedTasks === 1 ? "New assigned task" : "New assigned tasks",
+        message: `${currentCounts.assignedTasks} task${currentCounts.assignedTasks === 1 ? "" : "s"} assigned today`,
+        actionLabel: "Open tasks",
+        onClick: () => selectWorkspaceTab("My Tasks"),
+      });
+    }
+  }, [overview]);
+
   return (
     <main className="developerWorkspacePage" data-sidebar-collapsed={isSidebarCollapsed} data-sidebar-open={isMobileSidebarOpen}>
+      <WorkspaceNotificationCenter notifications={notifications} onDismiss={(id) => setNotifications((current) => current.filter((item) => item.id !== id))} />
       <button
         type="button"
         className="developerMobileMenu"
@@ -443,7 +489,8 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
             return (
               <button key={tab} type="button" data-active={activeTab === tab} onClick={() => selectWorkspaceTab(tab)} title={tab}>
                 <Icon aria-hidden="true" />
-                <span>{tab}</span>
+                <span className="developerNavLabel">{tab}</span>
+                {tab === "Messages" && unreadMessageCount > 0 && <span className="developerNavBadge">{unreadMessageCount}</span>}
               </button>
             );
           })}
@@ -455,7 +502,7 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
         <header className="developerHeader">
           <div>
             <p>{config.role}</p>
-            <h1>Welcome back, {user.displayName}</h1>
+            <h1>{activeTab}</h1>
           </div>
           <span>Europe/Stockholm</span>
         </header>

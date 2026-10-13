@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { EmployeeWorkspaceDashboard } from "./EmployeeWorkspaceDashboard";
+import { type WorkspaceNotification, WorkspaceNotificationCenter } from "./WorkspaceNotificationCenter";
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 type OrderStatus =
@@ -570,13 +571,8 @@ export default function Home() {
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [submittingLogin, setSubmittingLogin] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
-  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [notifications, setNotifications] = useState<WorkspaceNotification[]>([]);
   const [directOrderOpened, setDirectOrderOpened] = useState(false);
-  const [events, setEvents] = useState<string[]>([
-    "New order received",
-    "Payment received",
-    "Delivery date approaching",
-  ]);
   const isAdminUser = admin?.access !== "employee";
 
 
@@ -726,6 +722,11 @@ export default function Home() {
     [orders],
   );
 
+  function addWorkspaceNotification(notification: Omit<WorkspaceNotification, "id">) {
+    const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    setNotifications((current) => [{ id, autoDismissMs: 5000, ...notification }, ...current].slice(0, 5));
+  }
+
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmittingLogin(true);
@@ -749,6 +750,7 @@ export default function Home() {
       setAdmin(user);
       setSignedIn(true);
       setPassword("");
+      addWorkspaceNotification({ title: `Welcome back, ${user?.displayName || "there"}!` });
       if (user?.access !== "employee") {
         await sendHeartbeat();
         await fetchOrders("");
@@ -777,6 +779,7 @@ export default function Home() {
     setCareSubscriptions([]);
     setSearch("");
     setPresence(DEFAULT_PRESENCE);
+    setNotifications([]);
   }
 
   async function openOrderDetails(order: Order) {
@@ -829,10 +832,12 @@ export default function Home() {
         notification?: { attempted?: boolean; sent?: boolean };
       };
       mergeUpdatedOrder(data.order);
-      setEvents((current) => [
-        `${admin?.displayName || "Admin"} changed ${data.order.orderNumber} to ${data.order.projectStatus}`,
-        ...current,
-      ]);
+      addWorkspaceNotification({
+        title: "Project status updated",
+        message: `${data.order.orderNumber} changed to ${data.order.projectStatus}`,
+        actionLabel: "View order",
+        onClick: () => openOrderDetails(data.order),
+      });
     } catch (error) {
       setOrdersError(error instanceof Error ? error.message : apiErrorMessage(500));
     } finally {
@@ -856,12 +861,14 @@ export default function Home() {
         notification?: { sent?: boolean; skipped?: boolean };
       };
       mergeUpdatedOrder(data.order);
-      setEvents((current) => [
-        data.notification?.sent
-          ? `${admin?.displayName || "Admin"} confirmed ${data.order.orderNumber} and notified the customer`
-          : `${data.order.orderNumber} is already confirmed or notification is pending`,
-        ...current,
-      ]);
+      addWorkspaceNotification({
+        title: data.notification?.sent ? "Order confirmed" : "Order already confirmed",
+        message: data.notification?.sent
+          ? `${data.order.orderNumber} was confirmed and the customer was notified.`
+          : `${data.order.orderNumber} is already confirmed or notification is pending.`,
+        actionLabel: "View order",
+        onClick: () => openOrderDetails(data.order),
+      });
     } catch (error) {
       setOrdersError(error instanceof Error ? error.message : apiErrorMessage(500));
     } finally {
@@ -887,12 +894,14 @@ export default function Home() {
         notification?: { sent?: boolean };
       };
       mergeUpdatedOrder(data.order);
-      setEvents((current) => [
-        data.notification?.sent
-          ? `${admin?.displayName || "Admin"} requested clarification for ${data.order.orderNumber}`
-          : `Clarification saved for ${data.order.orderNumber}; email delivery needs attention`,
-        ...current,
-      ]);
+      addWorkspaceNotification({
+        title: data.notification?.sent ? "Clarification requested" : "Clarification saved",
+        message: data.notification?.sent
+          ? `Clarification request sent for ${data.order.orderNumber}.`
+          : `Clarification saved for ${data.order.orderNumber}; email delivery needs attention.`,
+        actionLabel: "View order",
+        onClick: () => openOrderDetails(data.order),
+      });
     } catch (error) {
       setOrdersError(error instanceof Error ? error.message : apiErrorMessage(500));
     } finally {
@@ -987,6 +996,7 @@ export default function Home() {
 
   return (
     <main className="dashboardPage" id="orders">
+      <WorkspaceNotificationCenter notifications={notifications} onDismiss={(id) => setNotifications((current) => current.filter((item) => item.id !== id))} />
       <header className="dashboardHeader">
         <div className="brandLockup">
           <BlueMindMark />
@@ -996,23 +1006,6 @@ export default function Home() {
           </div>
         </div>
         <div className="headerActions">
-          <div className="notificationWrap">
-            <button
-              type="button"
-              aria-label="Notifications"
-              className="iconButton"
-              onClick={() => setNotificationOpen((open) => !open)}
-            >
-              Bell
-            </button>
-            {notificationOpen && (
-              <div className="notificationPanel">
-                {events.slice(0, 4).map((event) => (
-                  <p key={event}>{event}</p>
-                ))}
-              </div>
-            )}
-          </div>
           <section className="presenceBlock" aria-label="Employee presence">
             <span className="presenceTitle">Employees</span>
             <div className="presenceList">
@@ -1043,7 +1036,7 @@ export default function Home() {
       <section className="dashboardHero">
         <div>
           <p>Orders workspace</p>
-          <h1>{admin ? `Welcome back, ${admin.displayName}` : "Orders"}</h1>
+          <h1>Orders Workspace</h1>
         </div>
         <div className="dashboardStats" aria-label="Order summary">
           <span>{orderCountLabel}</span>

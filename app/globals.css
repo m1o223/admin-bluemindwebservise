@@ -320,10 +320,6 @@ a[role="button"] {
   justify-content: flex-end;
 }
 
-.notificationWrap {
-  position: relative;
-}
-
 .iconButton,
 .profileBadge {
   width: 38px;
@@ -339,32 +335,119 @@ a[role="button"] {
   text-transform: uppercase;
 }
 
-.notificationPanel {
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
-  z-index: 10;
-  width: min(280px, calc(100vw - 48px));
-  padding: 10px;
-  border: 1px solid var(--line);
+
+.workspaceNotificationStack {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 200;
+  width: min(360px, calc(100vw - 32px));
+  display: grid;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.workspaceToast {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  padding: 14px;
+  border: 1px solid #d9e4f0;
   border-radius: var(--radius);
-  background: #fff;
-  box-shadow: var(--shadow);
+  background: #ffffff;
+  color: #111111;
+  box-shadow: 0 16px 40px #1118271f;
+  pointer-events: auto;
+  max-height: 220px;
+  overflow: hidden;
+  animation: workspaceToastIn 300ms ease both;
+  transition:
+    transform 300ms ease,
+    opacity 300ms ease,
+    max-height 300ms ease,
+    padding 300ms ease,
+    margin 300ms ease;
 }
 
-.notificationPanel p {
-  margin: 0;
-  padding: 10px;
-  border-bottom: 1px solid var(--line);
+.workspaceToast[data-exiting="true"] {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: -10px;
+  animation: workspaceToastOut 300ms ease both;
+}
+
+.workspaceToast strong {
+  display: block;
+  color: #111111;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.workspaceToast p {
+  margin: 4px 0 0;
   color: #384152;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.workspaceToastActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.workspaceToastAction,
+.workspaceToastClose {
+  min-height: 30px;
+  border: 1px solid #d9e4f0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #142d4e;
   font-size: 12px;
-  line-height: 1.4;
+  font-weight: 800;
 }
 
-.notificationPanel p:last-child {
-  border-bottom: 0;
+.workspaceToastAction {
+  padding: 0 10px;
 }
 
+.workspaceToastClose {
+  width: 30px;
+  padding: 0;
+}
+
+.workspaceToastAction:hover,
+.workspaceToastClose:hover {
+  background: #edf3fa;
+  transform: translateY(-1px);
+}
+
+@keyframes workspaceToastIn {
+  from {
+    opacity: 0;
+    transform: translateX(calc(100% + 32px));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes workspaceToastOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(calc(100% + 32px));
+  }
+}
 .presenceBlock {
   display: flex;
   align-items: center;
@@ -1024,6 +1107,20 @@ a[role="button"] {
 }
 
 @media (max-width: 640px) {
+  .workspaceNotificationStack {
+    top: 12px;
+    right: 12px;
+    width: min(340px, calc(100vw - 24px));
+  }
+
+  .workspaceToast {
+    grid-template-columns: 1fr;
+  }
+
+  .workspaceToastActions {
+    justify-content: end;
+  }
+
   .loginPage,
   .dashboardPage {
     padding: 16px;
@@ -1047,7 +1144,7 @@ a[role="button"] {
     flex-direction: column;
   }
 
-  .presenceBlock {
+.presenceBlock {
     align-items: flex-start;
     flex-direction: column;
     gap: 9px;
@@ -1236,7 +1333,7 @@ a[role="button"] {
   width: 100%;
   min-height: 42px;
   display: grid;
-  grid-template-columns: 20px minmax(0, 1fr);
+  grid-template-columns: 20px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   border: 1px solid transparent;
@@ -1247,6 +1344,7 @@ a[role="button"] {
   padding: 0 12px;
   font-size: 13px;
   font-weight: 700;
+  position: relative;
   transition:
     background 200ms ease,
     border-color 200ms ease,
@@ -1260,10 +1358,23 @@ a[role="button"] {
   stroke-width: 1.9;
 }
 
-.developerNav button span {
+.developerNavLabel {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.developerNavBadge {
+  min-width: 20px;
+  height: 20px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #142d4e;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .developerNav button:hover,
@@ -1326,7 +1437,7 @@ a[role="button"] {
 }
 
 .developerWorkspacePage[data-sidebar-collapsed="true"] .developerBrand div,
-.developerWorkspacePage[data-sidebar-collapsed="true"] .developerNav button span {
+.developerWorkspacePage[data-sidebar-collapsed="true"] .developerNavLabel {
   width: 0;
   opacity: 0;
   overflow: hidden;
@@ -1346,6 +1457,15 @@ a[role="button"] {
   grid-template-columns: 20px;
   justify-content: center;
   padding-inline: 0;
+}
+
+.developerWorkspacePage[data-sidebar-collapsed="true"] .developerNavBadge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  min-width: 16px;
+  height: 16px;
+  font-size: 9px;
 }
 
 .developerWorkspacePage[data-sidebar-collapsed="true"] .developerLogout {
@@ -1746,7 +1866,7 @@ a[role="button"] {
   }
 
   .developerWorkspacePage[data-sidebar-collapsed="true"] .developerBrand div,
-  .developerWorkspacePage[data-sidebar-collapsed="true"] .developerNav button span {
+  .developerWorkspacePage[data-sidebar-collapsed="true"] .developerNavLabel {
     width: auto;
     opacity: 1;
     overflow: visible;
@@ -1763,7 +1883,7 @@ a[role="button"] {
   }
 
   .developerWorkspacePage[data-sidebar-collapsed="true"] .developerNav button {
-    grid-template-columns: 20px minmax(0, 1fr);
+    grid-template-columns: 20px minmax(0, 1fr) auto;
     justify-content: stretch;
     padding: 0 12px;
   }
@@ -1830,6 +1950,7 @@ a[role="button"] {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .workspaceToast,
   .developerWorkspacePage,
   .developerSidebar,
   .developerNav button,
@@ -1837,5 +1958,10 @@ a[role="button"] {
   .developerMobileMenu,
   .developerSidebarScrim {
     transition: none;
+  }
+
+  .workspaceToast,
+  .workspaceToast[data-exiting="true"] {
+    animation: none;
   }
 }
