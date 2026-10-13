@@ -1271,8 +1271,8 @@ a[role="button"] {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 18px;
+  gap: 12px;
+  padding: 16px 14px;
   border-right: 1px solid var(--line);
   background: #ffffff;
   overflow: hidden;
@@ -1287,7 +1287,7 @@ a[role="button"] {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
@@ -1295,7 +1295,7 @@ a[role="button"] {
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .workspaceLogo {
@@ -1321,7 +1321,7 @@ a[role="button"] {
   min-height: 0;
   display: grid;
   align-content: start;
-  gap: 7px;
+  gap: 5px;
   flex: 1 1 auto;
   overflow-y: auto;
   overflow-x: hidden;
@@ -1331,17 +1331,17 @@ a[role="button"] {
 
 .developerNav button {
   width: 100%;
-  min-height: 42px;
+  min-height: 38px;
   display: grid;
-  grid-template-columns: 20px minmax(0, 1fr) auto;
+  grid-template-columns: 19px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   border: 1px solid transparent;
   border-radius: var(--radius);
   background: transparent;
   color: #111111;
   text-align: left;
-  padding: 0 12px;
+  padding: 0 10px;
   font-size: 13px;
   font-weight: 700;
   position: relative;
@@ -1352,8 +1352,8 @@ a[role="button"] {
 }
 
 .developerNav button svg {
-  width: 20px;
-  height: 20px;
+  width: 19px;
+  height: 19px;
   color: #142d4e;
   stroke-width: 1.9;
 }

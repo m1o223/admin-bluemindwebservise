@@ -5,20 +5,15 @@ import {
   Bell,
   Camera,
   ChevronDown,
-  Code2,
   Coffee,
   FileText,
-  FolderKanban,
   House,
   Laptop,
   Leaf,
-  ListTodo,
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
   MessageSquare,
-  Package,
-  Palette,
   Languages,
   LogOut,
   ShieldCheck,
@@ -179,7 +174,7 @@ const EMPLOYEE_WORKSPACES: Record<EmployeeWorkspaceConfig["roleKey"], EmployeeWo
     codeText: "Authorized iOS GitHub repositories will appear here. Repository access is managed by BlueMind Workspace.",
     buildsTitle: "App Builds",
     buildsText: "Development builds, TestFlight links, and testing instructions will appear here when configured.",
-    tabs: ["Dashboard", "My Tasks", "My Projects", "Designs", "Code & Repositories", "App Builds", "Messages", "Meetings", "My Schedule", "My Tools", "My Profile"],
+    tabs: ["Dashboard", "Messages", "Meetings", "My Schedule", "My Tools", "My Profile"],
   },
   android: {
     role: "Android Developer",
@@ -196,7 +191,7 @@ const EMPLOYEE_WORKSPACES: Record<EmployeeWorkspaceConfig["roleKey"], EmployeeWo
     codeText: "Authorized Android GitHub repositories will appear here. Repository access is managed by BlueMind Workspace.",
     buildsTitle: "App Builds",
     buildsText: "Android testing builds, internal testing links, and QA notes will appear here when configured.",
-    tabs: ["Dashboard", "My Tasks", "My Projects", "Designs", "Code & Repositories", "App Builds", "Messages", "Meetings", "My Schedule", "My Tools", "My Profile"],
+    tabs: ["Dashboard", "Messages", "Meetings", "My Schedule", "My Tools", "My Profile"],
   },
   design: {
     role: "UI/UX Designer",
@@ -213,7 +208,7 @@ const EMPLOYEE_WORKSPACES: Record<EmployeeWorkspaceConfig["roleKey"], EmployeeWo
     feedbackText: "Management feedback, requested changes, and review notes will appear here when a design is reviewed.",
     submitTitle: "Submit Designs",
     submitText: "Submit completed design work through an assigned task or approved Figma link. Secure file upload will be connected in a later step.",
-    tabs: ["Dashboard", "My Tasks", "My Projects", "Design Studio", "Design Feedback", "Submit Designs", "Messages", "Meetings", "My Schedule", "My Tools", "My Profile"],
+    tabs: ["Dashboard", "Messages", "Meetings", "My Schedule", "My Tools", "My Profile"],
   },
 };
 
@@ -228,14 +223,6 @@ type Tab = string;
 
 const WORKSPACE_NAV_ICONS: Record<string, LucideIcon> = {
   Dashboard: House,
-  "My Tasks": ListTodo,
-  "My Projects": FolderKanban,
-  Designs: Palette,
-  "Design Studio": Palette,
-  "Design Feedback": Palette,
-  "Submit Designs": Palette,
-  "Code & Repositories": Code2,
-  "App Builds": Package,
   Messages: MessageSquare,
   Meetings: Video,
   "My Schedule": CalendarDays,
@@ -540,8 +527,8 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
       addWorkspaceNotification({
         title: currentCounts.assignedTasks === 1 ? "New assigned task" : "New assigned tasks",
         message: `${currentCounts.assignedTasks} task${currentCounts.assignedTasks === 1 ? "" : "s"} assigned today`,
-        actionLabel: "Open tasks",
-        onClick: () => selectWorkspaceTab("My Tasks"),
+        actionLabel: "Open dashboard",
+        onClick: () => selectWorkspaceTab("Dashboard"),
       });
     }
   }, [overview]);
