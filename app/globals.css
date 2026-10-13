@@ -1610,8 +1610,7 @@ a[role="button"] {
   box-shadow: 0 8px 24px #11182708;
 }
 
-.developerPanel h2,
-.workspaceForm h3 {
+.developerPanel h2 {
   margin: 0;
   font-size: 24px;
   letter-spacing: -0.6px;
@@ -1666,7 +1665,6 @@ a[role="button"] {
 
 .taskDetail,
 .taskSummary,
-.workspaceForm,
 .profileGrid,
 .toolsGrid,
 .scheduleList {
@@ -1690,17 +1688,14 @@ a[role="button"] {
   font-weight: 700;
 }
 
-.taskActions,
-.workSessionControls {
+.taskActions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
 
 .developerPanel button,
-.workspaceForm button,
-.taskActions button,
-.workSessionControls button {
+.taskActions button {
   min-height: 40px;
   border: 1px solid #142d4e;
   border-radius: var(--radius);
@@ -1712,26 +1707,21 @@ a[role="button"] {
 }
 
 .developerPanel button:hover,
-.workspaceForm button:hover,
-.taskActions button:hover,
-.workSessionControls button:hover {
+.taskActions button:hover {
   transform: scale(.98);
 }
 
 .developerPanel .secondaryAction,
-.taskActions .secondaryAction,
-.workSessionControls .secondaryAction {
+.taskActions .secondaryAction {
   background: #ffffff;
   color: #142d4e;
 }
 
 .developerPanel .secondaryAction:hover,
-.taskActions .secondaryAction:hover,
-.workSessionControls .secondaryAction:hover {
+.taskActions .secondaryAction:hover {
   background: #edf3fa;
 }
 
-.workspaceForm label,
 .taskDetail label {
   display: grid;
   gap: 7px;
@@ -1740,7 +1730,6 @@ a[role="button"] {
   font-weight: 750;
 }
 
-.workspaceForm textarea,
 .taskDetail textarea,
 .taskDetail input {
   width: 100%;
@@ -1753,7 +1742,6 @@ a[role="button"] {
   resize: vertical;
 }
 
-.workspaceForm textarea:focus,
 .taskDetail textarea:focus,
 .taskDetail input:focus {
   border-color: #142d4e;
@@ -1946,8 +1934,7 @@ a[role="button"] {
   border-top: 1px solid var(--line);
 }
 
-.developerPanel button:disabled,
-.workspaceForm button:disabled {
+.developerPanel button:disabled {
   cursor: not-allowed;
   opacity: .55;
   transform: none;

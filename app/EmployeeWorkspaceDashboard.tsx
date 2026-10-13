@@ -2,7 +2,6 @@
 
 import {
   CalendarDays,
-  Clock,
   Code2,
   Coffee,
   FileText,
@@ -91,15 +90,6 @@ type WorkspaceFile = {
   uploadedAt: string | null;
 };
 
-type WorkSession = {
-  id: string;
-  status: "active" | "paused" | "ended";
-  currentTaskId: string;
-  startedAt: string | null;
-  activeMilliseconds: number;
-  breakMilliseconds: number;
-} | null;
-
 type WorkspaceOverview = {
   summary: {
     todayAssignedTasks: number;
@@ -109,7 +99,6 @@ type WorkspaceOverview = {
     upcomingDeadlines: WorkspaceTask[];
     unreadMessages: number;
     nextMeeting: WorkspaceMeeting | null;
-    todayWork: { activeMilliseconds: number; breakMilliseconds: number };
   };
   tasks: WorkspaceTask[];
   projects: WorkspaceProject[];
@@ -184,7 +173,7 @@ const EMPLOYEE_WORKSPACES: Record<EmployeeWorkspaceConfig["roleKey"], EmployeeWo
     codeText: "Authorized iOS GitHub repositories will appear here. Repository access is managed by BlueMind Workspace.",
     buildsTitle: "App Builds",
     buildsText: "Development builds, TestFlight links, and testing instructions will appear here when configured.",
-    tabs: ["Dashboard", "My Tasks", "My Projects", "Designs", "Code & Repositories", "App Builds", "Messages", "Meetings", "My Schedule", "Work Time", "My Tools", "My Profile"],
+    tabs: ["Dashboard", "My Tasks", "My Projects", "Designs", "Code & Repositories", "App Builds", "Messages", "Meetings", "My Schedule", "My Tools", "My Profile"],
   },
   android: {
     role: "Android Developer",
@@ -201,7 +190,7 @@ const EMPLOYEE_WORKSPACES: Record<EmployeeWorkspaceConfig["roleKey"], EmployeeWo
     codeText: "Authorized Android GitHub repositories will appear here. Repository access is managed by BlueMind Workspace.",
     buildsTitle: "App Builds",
     buildsText: "Android testing builds, internal testing links, and QA notes will appear here when configured.",
-    tabs: ["Dashboard", "My Tasks", "My Projects", "Designs", "Code & Repositories", "App Builds", "Messages", "Meetings", "My Schedule", "Work Time", "My Tools", "My Profile"],
+    tabs: ["Dashboard", "My Tasks", "My Projects", "Designs", "Code & Repositories", "App Builds", "Messages", "Meetings", "My Schedule", "My Tools", "My Profile"],
   },
   design: {
     role: "UI/UX Designer",
@@ -218,7 +207,7 @@ const EMPLOYEE_WORKSPACES: Record<EmployeeWorkspaceConfig["roleKey"], EmployeeWo
     feedbackText: "Management feedback, requested changes, and review notes will appear here when a design is reviewed.",
     submitTitle: "Submit Designs",
     submitText: "Submit completed design work through an assigned task or approved Figma link. Secure file upload will be connected in a later step.",
-    tabs: ["Dashboard", "My Tasks", "My Projects", "Design Studio", "Design Feedback", "Submit Designs", "Messages", "Meetings", "My Schedule", "Work Time", "My Tools", "My Profile"],
+    tabs: ["Dashboard", "My Tasks", "My Projects", "Design Studio", "Design Feedback", "Submit Designs", "Messages", "Meetings", "My Schedule", "My Tools", "My Profile"],
   },
 };
 
@@ -244,7 +233,6 @@ const WORKSPACE_NAV_ICONS: Record<string, LucideIcon> = {
   Messages: MessageSquare,
   Meetings: Video,
   "My Schedule": CalendarDays,
-  "Work Time": Clock,
   "My Tools": Wrench,
   "My Profile": UserRound,
 };
@@ -281,14 +269,6 @@ function formatDate(value?: string | null) {
   return new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Stockholm" }).format(date);
 }
 
-function formatDuration(ms = 0) {
-  const minutes = Math.floor(ms / 60000);
-  const hours = Math.floor(minutes / 60);
-  const remaining = minutes % 60;
-  if (hours <= 0) return `${remaining} min`;
-  return `${hours}h ${remaining}m`;
-}
-
 function EmptyState({ title, text }: { title: string; text: string }) {
   return (
     <div className="workspaceEmpty">
@@ -313,9 +293,6 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
   const [selectedTaskId, setSelectedTaskId] = useState("");
   const [comment, setComment] = useState("");
   const [githubLink, setGithubLink] = useState("");
-  const [checkIn, setCheckIn] = useState({ completed: "", workingOn: "", blockers: "" });
-  const [workSession, setWorkSession] = useState<WorkSession>(null);
-  const [workSummary, setWorkSummary] = useState({ activeMilliseconds: 0, breakMilliseconds: 0 });
   const [tools, setTools] = useState<WorkspaceTool[]>([]);
   const [toolsLoading, setToolsLoading] = useState(false);
   const [toolsLoaded, setToolsLoaded] = useState(false);
@@ -354,9 +331,6 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
     try {
       const data = await workspaceFetch<WorkspaceOverview>("/api/workspace/overview");
       setOverview(data);
-      const session = await workspaceFetch<{ session: WorkSession; today: { activeMilliseconds: number; breakMilliseconds: number } }>("/api/workspace/work-session");
-      setWorkSession(session.session);
-      setWorkSummary(session.today);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Workspace unavailable.");
     } finally {
@@ -536,36 +510,6 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
     }
   }
 
-  async function workAction(action: "start" | "pause" | "resume" | "end") {
-    setError("");
-    try {
-      const data = await workspaceFetch<{ session: WorkSession; today: { activeMilliseconds: number; breakMilliseconds: number } }>("/api/workspace/work-session", {
-        method: "POST",
-        body: JSON.stringify({ action, currentTaskId: selectedTask?.taskId || "" }),
-      });
-      setWorkSession(data.session);
-      setWorkSummary(data.today);
-      setNotice(`Work session ${action} saved.`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not update work session.");
-    }
-  }
-
-  async function sendCheckIn(event: FormEvent) {
-    event.preventDefault();
-    setError("");
-    try {
-      await workspaceFetch("/api/workspace/check-ins", {
-        method: "POST",
-        body: JSON.stringify(checkIn),
-      });
-      setCheckIn({ completed: "", workingOn: "", blockers: "" });
-      setNotice("Progress check-in saved.");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save check-in.");
-    }
-  }
-
   const unreadMessageCount = overview?.summary.unreadMessages ?? 0;
 
   function addWorkspaceNotification(notification: Omit<WorkspaceNotification, "id">) {
@@ -581,7 +525,6 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
     ["Upcoming deadlines", overview?.summary.upcomingDeadlines.length ?? 0],
     ["Unread messages", overview?.summary.unreadMessages ?? 0],
     ["Next meeting", overview?.summary.nextMeeting ? formatDate(overview.summary.nextMeeting.startsAt) : "None"],
-    ["Today's working time", formatDuration(workSummary.activeMilliseconds || overview?.summary.todayWork.activeMilliseconds || 0)],
   ];
 
   useEffect(() => {
@@ -790,30 +733,6 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
         {!loading && activeTab === "My Schedule" && <MySchedulePanel />}
 
         {!loading && activeTab === "My Tools" && <ToolsPanel tools={tools} loading={toolsLoading} error={toolsError} onRetry={() => void loadTools()} />}
-        {!loading && activeTab === "Work Time" && (
-          <section className="developerPanel">
-            <h2>Work Time</h2>
-            <div className="workSessionControls">
-              <button type="button" onClick={() => workAction("start")}>Start Work</button>
-              <button type="button" className="secondaryAction" onClick={() => workAction("pause")}>Pause Work</button>
-              <button type="button" className="secondaryAction" onClick={() => workAction("resume")}>Resume Work</button>
-              <button type="button" className="secondaryAction" onClick={() => workAction("end")}>End Work</button>
-            </div>
-            <div className="developerMetricGrid compact">
-              <article className="developerMetric"><span>Current session</span><strong>{workSession?.status || "Not running"}</strong></article>
-              <article className="developerMetric"><span>Total active time today</span><strong>{formatDuration(workSummary.activeMilliseconds)}</strong></article>
-              <article className="developerMetric"><span>Break duration</span><strong>{formatDuration(workSummary.breakMilliseconds)}</strong></article>
-              <article className="developerMetric"><span>Current task</span><strong>{workSession?.currentTaskId || selectedTask?.title || "Not selected"}</strong></article>
-            </div>
-            <form className="workspaceForm" onSubmit={sendCheckIn}>
-              <h3>Progress check-in</h3>
-              <label>What I completed<textarea value={checkIn.completed} onChange={(event) => setCheckIn((current) => ({ ...current, completed: event.target.value }))} rows={2} /></label>
-              <label>What I'm working on<textarea value={checkIn.workingOn} onChange={(event) => setCheckIn((current) => ({ ...current, workingOn: event.target.value }))} rows={2} /></label>
-              <label>Problems or blockers<textarea value={checkIn.blockers} onChange={(event) => setCheckIn((current) => ({ ...current, blockers: event.target.value }))} rows={2} /></label>
-              <button type="submit">Save Check-in</button>
-            </form>
-          </section>
-        )}
 
         {!loading && activeTab === "My Profile" && (
           <ProfilePanel
