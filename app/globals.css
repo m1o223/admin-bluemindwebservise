@@ -1468,18 +1468,6 @@ a[role="button"] {
   font-size: 9px;
 }
 
-.developerWorkspacePage[data-sidebar-collapsed="true"] .developerLogout {
-  width: 100%;
-  min-width: 0;
-  padding-inline: 0;
-  font-size: 10px;
-}
-
-.developerLogout {
-  margin-top: auto;
-  flex-shrink: 0;
-}
-
 .developerMain {
   min-width: 0;
   height: 100vh;
@@ -1587,8 +1575,7 @@ a[role="button"] {
 }
 
 .developerMetric span,
-.taskSummary dt,
-.profileGrid dt {
+.taskSummary dt {
   color: var(--muted);
   font-size: 11px;
   font-weight: 800;
@@ -1665,23 +1652,20 @@ a[role="button"] {
 
 .taskDetail,
 .taskSummary,
-.profileGrid,
 .toolsGrid,
 .scheduleList {
   display: grid;
   gap: 12px;
 }
 
-.taskSummary dl,
-.profileGrid {
+.taskSummary dl {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin: 0;
 }
 
-.taskSummary dd,
-.profileGrid dd {
+.taskSummary dd {
   margin: 4px 0 0;
   color: #111111;
   font-size: 13px;
@@ -1766,10 +1750,10 @@ a[role="button"] {
 
 .profileHero {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 16px;
-  padding: 16px;
+  padding: 18px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: #f8fbff;
@@ -1798,8 +1782,7 @@ a[role="button"] {
 }
 
 .profileHero h3,
-.profileSection h3,
-.profileSettingCard h4 {
+.profileAccordionButton strong {
   margin: 0;
   color: #111111;
 }
@@ -1818,71 +1801,220 @@ a[role="button"] {
   font-weight: 650;
 }
 
-.profileStatusPill {
-  justify-self: end;
-  padding: 7px 10px;
-  border: 1px solid #cfe0d5;
-  border-radius: 999px;
-  background: #eef8f1;
-  color: #25523a;
-  font-size: 12px;
-  font-weight: 850;
+.profileSettingsList {
+  display: grid;
+  gap: 10px;
 }
 
-.profileSection {
-  display: grid;
-  gap: 12px;
-}
-
-.profileSettingsGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.profileSettingCard {
-  display: grid;
-  align-content: start;
-  gap: 12px;
-  min-width: 0;
-  padding: 14px;
+.profileAccordionItem {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: #ffffff;
+  overflow: hidden;
+  transition: border-color .2s ease, box-shadow .2s ease;
 }
 
-.profileSettingCard p {
+.profileAccordionItem[data-open="true"] {
+  border-color: #c7d8ea;
+  box-shadow: 0 10px 30px #142d4e0a;
+}
+
+.profileAccordionButton {
+  width: 100%;
+  min-height: 72px;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 0;
+  background: #ffffff;
+  color: #111111;
+  text-align: left;
+  cursor: pointer;
+}
+
+.profileAccordionButton:hover {
+  background: #edf3fa;
+}
+
+.profileAccordionButton strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 850;
+}
+
+.profileAccordionButton small {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.profileAccordionIcon {
+  width: 42px;
+  height: 42px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid #dbe6f1;
+  border-radius: 50%;
+  background: #f8fbff;
+  color: #142d4e;
+}
+
+.profileAccordionIcon svg,
+.profileLogoutRow svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+}
+
+.profileAccordionChevron {
+  color: #142d4e;
+  transition: transform .2s ease;
+}
+
+.profileAccordionItem[data-open="true"] .profileAccordionChevron {
+  transform: rotate(180deg);
+}
+
+.profileAccordionContent {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows .22s ease;
+}
+
+.profileAccordionContent > div {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.profileAccordionItem[data-open="true"] .profileAccordionContent {
+  grid-template-rows: 1fr;
+}
+
+.profileAccordionContent > div > * {
+  padding: 0 16px 16px;
+}
+
+.profileAccountList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.profileAccountList div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #e6edf5;
+  border-radius: 12px;
+  background: #fbfdff;
+}
+
+.profileAccountList dt {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.profileAccountList dd {
+  margin: 0;
+  color: #111111;
+  font-size: 14px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.profileSettingStack {
+  display: grid;
+  gap: 12px;
+}
+
+.profileMuted {
   margin: 0;
   color: var(--muted);
   font-size: 13px;
   line-height: 1.55;
 }
 
-.profileSettingCard label,
-.profileUpload {
+.profileSwitch {
   display: grid;
-  gap: 7px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 48px;
+  padding: 12px;
+  border: 1px solid #e6edf5;
+  border-radius: 12px;
+  background: #fbfdff;
   color: #111111;
-  font-size: 12px;
-  font-weight: 750;
+  font-size: 14px;
+  font-weight: 800;
 }
 
-.profileSettingCard input,
-.profileSettingCard select {
-  width: 100%;
-  min-height: 40px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+.profileSwitch input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.profileSwitchTrack {
+  width: 46px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  border-radius: 999px;
+  background: #d7e1ec;
+  transition: background .2s ease;
+}
+
+.profileSwitchTrack span {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
   background: #ffffff;
-  color: #111111;
-  padding: 0 11px;
-  outline: none;
+  box-shadow: 0 2px 8px #1118271f;
+  transition: transform .2s ease;
 }
 
-.profileSettingCard input:focus,
-.profileSettingCard select:focus {
+.profileSwitch input:checked + .profileSwitchTrack {
+  background: #142d4e;
+}
+
+.profileSwitch input:checked + .profileSwitchTrack span {
+  transform: translateX(20px);
+}
+
+.profileLanguageOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profileLanguageOptions button {
+  min-height: 40px;
+  border: 1px solid #d7e1ec;
+  background: #ffffff;
+  color: #142d4e;
+}
+
+.profileLanguageOptions button[data-active="true"] {
+  background: #142d4e;
+  color: #ffffff;
   border-color: #142d4e;
-  box-shadow: 0 0 0 4px #142d4e12;
+}
+
+.profilePhotoSettings {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
 }
 
 .profileUpload {
@@ -1915,23 +2047,15 @@ a[role="button"] {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-}
-
-.profileToggle {
-  grid-template-columns: auto 1fr;
-  align-items: center;
-}
-
-.profileToggle input {
-  width: 18px;
-  min-height: 18px;
-  accent-color: #142d4e;
-}
-
-.profileLogoutRow {
   justify-content: flex-end;
-  padding-top: 4px;
+  padding-top: 14px;
   border-top: 1px solid var(--line);
+}
+
+.profileLogoutRow button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .developerPanel button:disabled {
@@ -2373,11 +2497,6 @@ a[role="button"] {
     padding: 0 12px;
   }
 
-  .developerWorkspacePage[data-sidebar-collapsed="true"] .developerLogout {
-    padding-inline: 14px;
-    font-size: 12px;
-  }
-
   .developerMobileMenu,
   .developerMobileClose {
     display: inline-flex;
@@ -2415,9 +2534,8 @@ a[role="button"] {
   .developerMetricGrid.compact,
   .developerTwoColumn,
   .toolsGrid,
-  .profileSettingsGrid,
-  .taskSummary dl,
-  .profileGrid {
+  .profileAccountList,
+  .taskSummary dl {
     grid-template-columns: 1fr;
   }
 
@@ -2426,8 +2544,13 @@ a[role="button"] {
     justify-items: start;
   }
 
-  .profileStatusPill {
-    justify-self: start;
+  .profileAccordionButton {
+    grid-template-columns: 38px minmax(0, 1fr) 18px;
+    padding: 12px;
+  }
+
+  .profilePhotoSettings {
+    grid-template-columns: 1fr;
   }
 }
 
