@@ -780,7 +780,8 @@ function ProfilePanel({
   onPreferencesSave: () => void;
   onLogout: () => void;
 }) {
-  const [expandedSection, setExpandedSection] = useState<"security" | "notifications" | "language" | "photo" | null>("security");
+  const [expandedSection, setExpandedSection] = useState<"security" | "notifications" | "language" | null>("security");
+  const photoInputRef = useRef<HTMLInputElement | null>(null);
   const current = profile || {
     ...fallbackUser,
     accountStatus: "Active",
@@ -793,7 +794,7 @@ function ProfilePanel({
   const isArabic = language === "Arabic";
   const copy = isArabic ? PROFILE_COPY.ar : PROFILE_COPY.en;
 
-  function toggleSection(section: "security" | "notifications" | "language" | "photo") {
+  function toggleSection(section: "security" | "notifications" | "language") {
     setExpandedSection((currentSection) => currentSection === section ? null : section);
   }
 
@@ -803,7 +804,7 @@ function ProfilePanel({
   }
 
   const sections: {
-    id: "security" | "notifications" | "language" | "photo";
+    id: "security" | "notifications" | "language";
     title: string;
     description: string;
     Icon: LucideIcon;
@@ -860,28 +861,6 @@ function ProfilePanel({
         </div>
       ),
     },
-    {
-      id: "photo",
-      title: copy.photoTitle,
-      description: copy.photoDescription,
-      Icon: Camera,
-      content: (
-        <div className="profilePhotoSettings">
-          <ProfileAvatar profile={current} draft={photoDraft} />
-          <div className="profileSettingStack">
-            <label className="profileUpload">
-              {copy.chooseImage}
-              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => onPhotoChange(event.target.files?.[0])} />
-            </label>
-            <div className="profileActionRow">
-              <button type="button" onClick={onPhotoSave} disabled={!photoDraft}>{copy.savePhoto}</button>
-              <button type="button" className="secondaryAction" onClick={onPhotoRemove} disabled={!current.profilePhotoUrl && !photoDraft}>{copy.removePhoto}</button>
-            </div>
-            <p className="profileMuted">{copy.photoHelp}</p>
-          </div>
-        </div>
-      ),
-    },
   ];
 
   return (
@@ -897,11 +876,35 @@ function ProfilePanel({
       {!loading && !profile && error && <button type="button" className="secondaryAction" onClick={onRetry}>Retry</button>}
 
       <div className="profileHero">
-        <ProfileAvatar profile={current} draft={photoDraft} />
-        <div>
+        <div className="profileAvatarEdit">
+          <ProfileAvatar profile={current} draft={photoDraft} />
+          <button
+            type="button"
+            className="profileAvatarCamera"
+            aria-label={copy.changePhoto}
+            onClick={() => photoInputRef.current?.click()}
+          >
+            <Camera aria-hidden="true" />
+          </button>
+          <input
+            ref={photoInputRef}
+            className="profilePhotoInput"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={(event) => onPhotoChange(event.target.files?.[0])}
+          />
+        </div>
+        <div className="profileHeroDetails">
           <h3>{current.displayName}</h3>
           <p>{current.title || "BlueMind Workspace"}</p>
           <span>{current.email}</span>
+          {(photoDraft || current.profilePhotoUrl) && (
+            <div className="profilePhotoActions">
+              {photoDraft && <button type="button" onClick={onPhotoSave}>{copy.savePhoto}</button>}
+              <button type="button" className="secondaryAction" onClick={onPhotoRemove}>{copy.removePhoto}</button>
+              {photoDraft && <small>{copy.photoHelp}</small>}
+            </div>
+          )}
         </div>
       </div>
 
@@ -956,8 +959,7 @@ const PROFILE_COPY = {
     notificationsDescription: "Control optional message and meeting alerts.",
     languageTitle: "Language",
     languageDescription: "Choose the Workspace language for supported profile settings.",
-    photoTitle: "Profile Photo",
-    photoDescription: "Upload or remove the photo shown in Workspace and Messenger.",
+    changePhoto: "Upload or replace profile photo",
     fullName: "Full name",
     workEmail: "Work email",
     jobRole: "Job role",
@@ -967,7 +969,6 @@ const PROFILE_COPY = {
     meetingNotifications: "Meeting Notifications",
     securityNotifications: "Essential security notifications remain enabled.",
     savePreferences: "Save Preferences",
-    chooseImage: "Choose Image",
     savePhoto: "Save Photo",
     removePhoto: "Remove Photo",
     photoHelp: "JPG, PNG, or WebP. Maximum 300 KB.",
@@ -985,8 +986,7 @@ const PROFILE_COPY = {
     notificationsDescription: "التحكم في تنبيهات الرسائل والاجتماعات الاختيارية.",
     languageTitle: "اللغة",
     languageDescription: "اختر لغة مساحة العمل للإعدادات المدعومة.",
-    photoTitle: "الصورة الشخصية",
-    photoDescription: "ارفع أو احذف الصورة التي تظهر في مساحة العمل والمراسلة.",
+    changePhoto: "\u062a\u063a\u064a\u064a\u0631 \u0627\u0644\u0635\u0648\u0631\u0629 \u0627\u0644\u0634\u062e\u0635\u064a\u0629",
     fullName: "الاسم الكامل",
     workEmail: "بريد العمل",
     jobRole: "الدور الوظيفي",
@@ -996,7 +996,6 @@ const PROFILE_COPY = {
     meetingNotifications: "إشعارات الاجتماعات",
     securityNotifications: "تبقى إشعارات الأمان الأساسية مفعلة.",
     savePreferences: "حفظ الإعدادات",
-    chooseImage: "اختيار صورة",
     savePhoto: "حفظ الصورة",
     removePhoto: "إزالة الصورة",
     photoHelp: "JPG أو PNG أو WebP. الحد الأقصى 300 كيلوبايت.",

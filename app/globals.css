@@ -1759,9 +1759,16 @@ a[role="button"] {
   background: #f8fbff;
 }
 
+.profileAvatarEdit {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  flex: 0 0 auto;
+}
+
 .profileAvatarLarge {
-  width: 84px;
-  height: 84px;
+  width: 88px;
+  height: 88px;
   display: inline-grid;
   place-items: center;
   overflow: hidden;
@@ -1773,6 +1780,44 @@ a[role="button"] {
   font-weight: 850;
 }
 
+.profileAvatarCamera {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: #142d4e;
+  color: #ffffff;
+  box-shadow: 0 8px 20px #142d4e24;
+}
+
+.profileAvatarCamera:hover {
+  background: #142d4e;
+  color: #ffffff;
+  transform: scale(0.98);
+}
+
+.profileAvatarCamera svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 2.2;
+}
+
+.profilePhotoInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
 .profileAvatarLarge img,
 .messengerAvatar img {
   width: 100%;
@@ -1781,10 +1826,14 @@ a[role="button"] {
   object-fit: cover;
 }
 
-.profileHero h3,
-.profileAccordionButton strong {
+.profileHero h3 {
   margin: 0;
   color: #111111;
+}
+
+.profileAccordionButton strong {
+  margin: 0;
+  color: #142d4e;
 }
 
 .profileHero h3 {
@@ -1807,7 +1856,7 @@ a[role="button"] {
 }
 
 .profileAccordionItem {
-  border: 1px solid var(--line);
+  border: 1px solid #e5e7eb;
   border-radius: var(--radius);
   background: #ffffff;
   overflow: hidden;
@@ -1815,8 +1864,8 @@ a[role="button"] {
 }
 
 .profileAccordionItem[data-open="true"] {
-  border-color: #c7d8ea;
-  box-shadow: 0 10px 30px #142d4e0a;
+  border-color: #d7e1ec;
+  box-shadow: 0 10px 30px #142d4e08;
 }
 
 .profileAccordionButton {
@@ -1829,7 +1878,7 @@ a[role="button"] {
   padding: 14px 16px;
   border: 0;
   background: #ffffff;
-  color: #111111;
+  color: #142d4e;
   text-align: left;
   cursor: pointer;
 }
@@ -1847,7 +1896,8 @@ a[role="button"] {
 .profileAccordionButton small {
   display: block;
   margin-top: 3px;
-  color: var(--muted);
+  color: #142d4e;
+  opacity: .72;
   font-size: 13px;
   font-weight: 600;
   line-height: 1.45;
@@ -1858,9 +1908,9 @@ a[role="button"] {
   height: 42px;
   display: inline-grid;
   place-items: center;
-  border: 1px solid #dbe6f1;
+  border: 1px solid #e5e7eb;
   border-radius: 50%;
-  background: #f8fbff;
+  background: #ffffff;
   color: #142d4e;
 }
 
@@ -2010,39 +2060,31 @@ a[role="button"] {
   border-color: #142d4e;
 }
 
-.profilePhotoSettings {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 16px;
-  align-items: start;
+.profileHeroDetails {
+  min-width: 0;
 }
 
-.profileUpload {
-  width: fit-content;
-  min-height: 40px;
+.profilePhotoActions {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  padding: 0 14px;
-  border: 1px solid #142d4e;
-  border-radius: var(--radius);
-  background: #ffffff;
-  color: #142d4e;
-  cursor: pointer;
+  gap: 8px;
+  margin-top: 12px;
 }
 
-.profileUpload:hover {
-  background: #edf3fa;
+.profilePhotoActions button {
+  min-height: 36px;
+  padding-inline: 12px;
 }
 
-.profileUpload input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+.profilePhotoActions small {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.45;
 }
 
-.profileActionRow,
 .profileLogoutRow {
   display: flex;
   flex-wrap: wrap;
@@ -2549,9 +2591,6 @@ a[role="button"] {
     padding: 12px;
   }
 
-  .profilePhotoSettings {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 360px) {
