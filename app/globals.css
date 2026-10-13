@@ -1271,8 +1271,8 @@ a[role="button"] {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px 14px;
+  gap: 14px;
+  padding: 16px 12px;
   border-right: 1px solid var(--line);
   background: #ffffff;
   overflow: hidden;
@@ -1287,7 +1287,7 @@ a[role="button"] {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
   flex-shrink: 0;
 }
 
@@ -1321,12 +1321,12 @@ a[role="button"] {
   min-height: 0;
   display: grid;
   align-content: start;
-  gap: 5px;
+  gap: 7px;
   flex: 1 1 auto;
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
-  padding-right: 2px;
+  padding: 0 2px 0 0;
 }
 
 .developerNav button {
@@ -1335,7 +1335,7 @@ a[role="button"] {
   display: grid;
   grid-template-columns: 19px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   border: 1px solid transparent;
   border-radius: var(--radius);
   background: transparent;
@@ -1384,6 +1384,11 @@ a[role="button"] {
   transform: translateY(-1px);
 }
 
+.developerWorkspacePage[data-sidebar-collapsed="true"] .developerNav button:hover,
+.developerWorkspacePage[data-sidebar-collapsed="true"] .developerNav button[data-active="true"] {
+  transform: none;
+}
+
 .developerSidebarToggle,
 .developerMobileMenu,
 .developerSidebarScrim {
@@ -1407,8 +1412,8 @@ a[role="button"] {
 }
 
 .developerSidebarToggle {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   flex: 0 0 auto;
 }
 
@@ -1433,7 +1438,7 @@ a[role="button"] {
 }
 
 .developerWorkspacePage[data-sidebar-collapsed="true"] .developerSidebar {
-  padding-inline: 14px;
+  padding-inline: 12px;
 }
 
 .developerWorkspacePage[data-sidebar-collapsed="true"] .developerBrand div,
@@ -1446,17 +1451,38 @@ a[role="button"] {
 
 .developerWorkspacePage[data-sidebar-collapsed="true"] .developerBrand {
   justify-content: center;
+  width: 100%;
+  gap: 0;
+}
+
+.developerWorkspacePage[data-sidebar-collapsed="true"] .developerBrand .workspaceLogo {
+  width: 42px;
+  height: 42px;
 }
 
 .developerWorkspacePage[data-sidebar-collapsed="true"] .developerSidebarTop {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.developerWorkspacePage[data-sidebar-collapsed="true"] .developerNav {
   justify-items: center;
+  gap: 8px;
+  padding: 0;
 }
 
 .developerWorkspacePage[data-sidebar-collapsed="true"] .developerNav button {
+  width: 42px;
+  height: 42px;
+  min-height: 42px;
   grid-template-columns: 20px;
   justify-content: center;
-  padding-inline: 0;
+  justify-items: center;
+  padding: 0;
+  border-radius: 10px;
 }
 
 .developerWorkspacePage[data-sidebar-collapsed="true"] .developerNavBadge {
@@ -2526,17 +2552,33 @@ a[role="button"] {
 
   .developerWorkspacePage[data-sidebar-collapsed="true"] .developerBrand {
     justify-content: flex-start;
+    width: auto;
+    gap: 10px;
   }
 
   .developerWorkspacePage[data-sidebar-collapsed="true"] .developerSidebarTop {
     display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
     justify-items: initial;
   }
 
+  .developerWorkspacePage[data-sidebar-collapsed="true"] .developerNav {
+    justify-items: stretch;
+    gap: 7px;
+    padding: 0 2px 0 0;
+  }
+
   .developerWorkspacePage[data-sidebar-collapsed="true"] .developerNav button {
+    width: 100%;
+    height: auto;
+    min-height: 38px;
     grid-template-columns: 20px minmax(0, 1fr) auto;
     justify-content: stretch;
+    justify-items: stretch;
     padding: 0 12px;
+    border-radius: var(--radius);
   }
 
   .developerMobileMenu,
