@@ -1915,6 +1915,190 @@ a[role="button"] {
   gap: 12px;
 }
 
+.schedulePanel {
+  gap: 18px;
+}
+
+.scheduleTableShell {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid #b9d7e8;
+  border-radius: 10px;
+  background: #ffffff;
+  overscroll-behavior-inline: contain;
+}
+
+.weeklyScheduleTable {
+  width: 100%;
+  min-width: 1040px;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  color: #08264a;
+}
+
+.weeklyScheduleTable th,
+.weeklyScheduleTable td {
+  border-right: 1px solid #b9d7e8;
+  border-bottom: 1px solid #b9d7e8;
+}
+
+.weeklyScheduleTable th:last-child,
+.weeklyScheduleTable td:last-child {
+  border-right: 0;
+}
+
+.weeklyScheduleTable tbody tr:last-child th,
+.weeklyScheduleTable tbody tr:last-child td:not(.scheduleDayOffCell) {
+  border-bottom: 0;
+}
+
+.weeklyScheduleTable thead th {
+  height: 58px;
+  background: #e8f6fd;
+  color: #08264a;
+  font-size: 14px;
+  font-weight: 850;
+  text-align: center;
+}
+
+.scheduleTimeHeader,
+.scheduleTimeCell {
+  width: 116px;
+}
+
+.scheduleTimeCell {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #ffffff;
+  color: #08264a;
+  font-size: 14px;
+  font-weight: 850;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.scheduleTimeHeader {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+}
+
+.scheduleDayOffHeader {
+  background: #082f5f !important;
+  color: #ffffff !important;
+}
+
+.scheduleSlot {
+  height: 74px;
+  padding: 10px 8px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.scheduleSlot-meeting,
+.scheduleSlot-break,
+.scheduleSlot-lunch {
+  background: #e8f6fd;
+}
+
+.scheduleSlot-work,
+.scheduleSlot-review {
+  background: #ffffff;
+}
+
+.scheduleSlotContent {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 5px;
+  min-height: 52px;
+}
+
+.scheduleSlotContent svg {
+  width: 22px;
+  height: 22px;
+  color: #082f5f;
+  stroke-width: 2.3;
+}
+
+.scheduleSlotContent span {
+  color: #08264a;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.14;
+}
+
+.scheduleSlot-review .scheduleSlotContent span,
+.scheduleSlot-meeting .scheduleSlotContent span {
+  max-width: 84px;
+}
+
+.scheduleNoteLines {
+  display: grid !important;
+  gap: 5px;
+  width: min(78px, 86%);
+  margin-top: 2px;
+}
+
+.scheduleNoteLines i {
+  display: block;
+  height: 1px;
+  background: #9fb4c8;
+}
+
+.scheduleDayOffCell {
+  width: 128px;
+  padding: 0;
+  border-bottom: 0 !important;
+  background: #082f5f;
+  vertical-align: middle;
+}
+
+.dayOffContent {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 18px;
+  min-height: 100%;
+  padding: 26px 12px;
+  color: #ffffff;
+  text-align: center;
+}
+
+.dayOffContent svg {
+  width: 48px;
+  height: 48px;
+  color: #ffffff;
+  stroke-width: 1.8;
+}
+
+.dayOffContent strong {
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: .2px;
+}
+
+.dayOffContent p {
+  margin: 0;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.dayOffDivider {
+  display: block;
+  width: 48px;
+  height: 2px;
+  background: #ffffff;
+  opacity: .92;
+}
+
 @keyframes workspaceSkeleton {
   0% {
     background-position: 0% 0;

@@ -1,10 +1,15 @@
 "use client";
 
 import {
+  CalendarDays,
   Clock,
   Code2,
+  Coffee,
+  FileText,
   FolderKanban,
   House,
+  Laptop,
+  Leaf,
   ListTodo,
   Menu,
   PanelLeftClose,
@@ -13,6 +18,8 @@ import {
   Package,
   Palette,
   UserRound,
+  UsersRound,
+  Utensils,
   Video,
   Wrench,
   X,
@@ -161,7 +168,7 @@ const EMPLOYEE_WORKSPACES: Record<string, EmployeeWorkspaceConfig> = {
     codeText: "Authorized iOS GitHub repositories will appear here. Repository access is managed by BlueMind Workspace.",
     buildsTitle: "App Builds",
     buildsText: "Development builds, TestFlight links, and testing instructions will appear here when configured.",
-    tabs: ["Dashboard", "My Tasks", "My Projects", "Designs", "Code & Repositories", "App Builds", "Messages", "Meetings", "Work Time", "My Tools", "My Profile"],
+    tabs: ["Dashboard", "My Tasks", "My Projects", "Designs", "Code & Repositories", "App Builds", "Messages", "Meetings", "My Schedule", "Work Time", "My Tools", "My Profile"],
   },
   PATRICK: {
     role: "Android Developer",
@@ -177,7 +184,7 @@ const EMPLOYEE_WORKSPACES: Record<string, EmployeeWorkspaceConfig> = {
     codeText: "Authorized Android GitHub repositories will appear here. Repository access is managed by BlueMind Workspace.",
     buildsTitle: "App Builds",
     buildsText: "Android testing builds, internal testing links, and QA notes will appear here when configured.",
-    tabs: ["Dashboard", "My Tasks", "My Projects", "Designs", "Code & Repositories", "App Builds", "Messages", "Meetings", "Work Time", "My Tools", "My Profile"],
+    tabs: ["Dashboard", "My Tasks", "My Projects", "Designs", "Code & Repositories", "App Builds", "Messages", "Meetings", "My Schedule", "Work Time", "My Tools", "My Profile"],
   },
   AMMAR: {
     role: "UI/UX Designer",
@@ -193,7 +200,7 @@ const EMPLOYEE_WORKSPACES: Record<string, EmployeeWorkspaceConfig> = {
     feedbackText: "Management feedback, requested changes, and review notes will appear here when a design is reviewed.",
     submitTitle: "Submit Designs",
     submitText: "Submit completed design work through an assigned task or approved Figma link. Secure file upload will be connected in a later step.",
-    tabs: ["Dashboard", "My Tasks", "My Projects", "Design Studio", "Design Feedback", "Submit Designs", "Messages", "Meetings", "Work Time", "My Tools", "My Profile"],
+    tabs: ["Dashboard", "My Tasks", "My Projects", "Design Studio", "Design Feedback", "Submit Designs", "Messages", "Meetings", "My Schedule", "Work Time", "My Tools", "My Profile"],
   },
 };
 
@@ -211,9 +218,35 @@ const WORKSPACE_NAV_ICONS: Record<string, LucideIcon> = {
   "App Builds": Package,
   Messages: MessageSquare,
   Meetings: Video,
+  "My Schedule": CalendarDays,
   "Work Time": Clock,
   "My Tools": Wrench,
   "My Profile": UserRound,
+};
+
+type ScheduleEntryType = "meeting" | "work" | "break" | "lunch" | "review";
+
+const SCHEDULE_DAYS = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"] as const;
+
+const WEEKLY_SCHEDULE_ROWS: { time: string; label: string; type: ScheduleEntryType }[] = [
+  { time: "07:30–08:00", label: "Morning Meeting", type: "meeting" },
+  { time: "08:00–10:00", label: "Work Session", type: "work" },
+  { time: "10:00–10:15", label: "Break", type: "break" },
+  { time: "10:15–12:00", label: "Work Session", type: "work" },
+  { time: "12:00–12:30", label: "Lunch", type: "lunch" },
+  { time: "12:30–14:30", label: "Work Session", type: "work" },
+  { time: "14:30–14:45", label: "Break", type: "break" },
+  { time: "14:45–15:30", label: "Work Session", type: "work" },
+  { time: "15:30–16:00", label: "End of Day Meeting", type: "meeting" },
+  { time: "16:00–16:30", label: "Final Work / Review", type: "review" },
+];
+
+const SCHEDULE_ENTRY_ICONS: Record<ScheduleEntryType, LucideIcon> = {
+  meeting: UsersRound,
+  work: Laptop,
+  break: Coffee,
+  lunch: Utensils,
+  review: FileText,
 };
 
 function formatDate(value?: string | null) {
@@ -599,6 +632,8 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
           </section>
         )}
 
+        {!loading && activeTab === "My Schedule" && <MySchedulePanel />}
+
         {!loading && activeTab === "My Tools" && <ToolsPanel tools={tools} loading={toolsLoading} error={toolsError} onRetry={() => void loadTools()} />}
         {!loading && activeTab === "Work Time" && (
           <section className="developerPanel">
@@ -677,6 +712,71 @@ function WorkspaceInfoPanel({ title, text }: { title: string; text: string }) {
       <EmptyState title="Not configured yet" text={text} />
       <p className="workspaceHelp">This section is prepared for secure backend data. Nothing private is shown unless it is assigned to this employee.</p>
     </section>
+  );
+}
+
+function MySchedulePanel() {
+  return (
+    <section className="developerPanel schedulePanel">
+      <div className="panelIntro">
+        <h2>My Schedule</h2>
+        <p>Your weekly work schedule</p>
+      </div>
+
+      <div className="scheduleTableShell" role="region" aria-label="Weekly work schedule" tabIndex={0}>
+        <table className="weeklyScheduleTable">
+          <thead>
+            <tr>
+              <th scope="col" className="scheduleTimeHeader">Time</th>
+              {SCHEDULE_DAYS.map((day) => <th scope="col" key={day}>{day}</th>)}
+              <th scope="col" className="scheduleDayOffHeader">Friday</th>
+            </tr>
+          </thead>
+          <tbody>
+            {WEEKLY_SCHEDULE_ROWS.map((row, rowIndex) => (
+              <tr key={row.time}>
+                <th scope="row" className="scheduleTimeCell">{row.time}</th>
+                {SCHEDULE_DAYS.map((day) => <ScheduleCell entry={row} key={`${day}-${row.time}`} />)}
+                {rowIndex === 0 && (
+                  <td className="scheduleDayOffCell" rowSpan={WEEKLY_SCHEDULE_ROWS.length}>
+                    <div className="dayOffContent">
+                      <CalendarDays aria-hidden="true" />
+                      <strong>WEEKLY<br />DAY OFF</strong>
+                      <span className="dayOffDivider" />
+                      <p>No meetings<br />No work sessions<br />No required activity</p>
+                      <span className="dayOffDivider" />
+                      <Leaf aria-hidden="true" />
+                      <p>Rest today<br />for a better<br />tomorrow.</p>
+                    </div>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function ScheduleCell({ entry }: { entry: { label: string; type: ScheduleEntryType } }) {
+  const Icon = SCHEDULE_ENTRY_ICONS[entry.type];
+  const hasLines = entry.type === "work" || entry.type === "review";
+
+  return (
+    <td className={`scheduleSlot scheduleSlot-${entry.type}`}>
+      <div className="scheduleSlotContent">
+        <Icon aria-hidden="true" />
+        <span>{entry.label}</span>
+        {hasLines && (
+          <span className="scheduleNoteLines" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
+        )}
+      </div>
+    </td>
   );
 }
 
