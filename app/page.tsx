@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { EmployeeWorkspaceDashboard } from "./EmployeeWorkspaceDashboard";
+import { WorkspaceMessenger } from "./WorkspaceMessenger";
 import { type WorkspaceNotification, WorkspaceNotificationCenter } from "./WorkspaceNotificationCenter";
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
@@ -572,6 +573,7 @@ export default function Home() {
   const [submittingLogin, setSubmittingLogin] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [notifications, setNotifications] = useState<WorkspaceNotification[]>([]);
+  const [adminMessengerOpen, setAdminMessengerOpen] = useState(false);
   const [directOrderOpened, setDirectOrderOpened] = useState(false);
   const isAdminUser = admin?.access !== "employee";
 
@@ -780,6 +782,7 @@ export default function Home() {
     setSearch("");
     setPresence(DEFAULT_PRESENCE);
     setNotifications([]);
+    setAdminMessengerOpen(false);
   }
 
   async function openOrderDetails(order: Order) {
@@ -1006,6 +1009,9 @@ export default function Home() {
           </div>
         </div>
         <div className="headerActions">
+          <button type="button" className="secondaryHeaderButton" onClick={() => setAdminMessengerOpen((open) => !open)}>
+            {adminMessengerOpen ? "Close Messenger" : "Messenger"}
+          </button>
           <section className="presenceBlock" aria-label="Employee presence">
             <span className="presenceTitle">Employees</span>
             <div className="presenceList">
@@ -1032,6 +1038,12 @@ export default function Home() {
           </button>
         </div>
       </header>
+
+      {adminMessengerOpen && admin && (
+        <section className="adminMessengerSection" aria-label="BlueMind Messenger">
+          <WorkspaceMessenger user={admin} onNotify={addWorkspaceNotification} />
+        </section>
+      )}
 
       <section className="dashboardHero">
         <div>

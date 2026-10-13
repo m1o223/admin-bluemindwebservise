@@ -19,6 +19,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { WorkspaceMessenger } from "./WorkspaceMessenger";
 import { type WorkspaceNotification, WorkspaceNotificationCenter } from "./WorkspaceNotificationCenter";
 
 type WorkspaceUser = {
@@ -263,7 +264,6 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
   const overviewCountsRef = useRef<{ unreadMessages: number; assignedTasks: number } | null>(null);
   const [overview, setOverview] = useState<WorkspaceOverview | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState("");
-  const [message, setMessage] = useState("");
   const [comment, setComment] = useState("");
   const [githubLink, setGithubLink] = useState("");
   const [checkIn, setCheckIn] = useState({ completed: "", workingOn: "", blockers: "" });
@@ -332,23 +332,6 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
       await refreshWorkspace();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not update task.");
-    }
-  }
-
-  async function sendMessage(event: FormEvent) {
-    event.preventDefault();
-    if (!message.trim()) return;
-    setError("");
-    try {
-      await workspaceFetch("/api/workspace/messages", {
-        method: "POST",
-        body: JSON.stringify({ toId: "M", message }),
-      });
-      setMessage("");
-      setNotice("Message sent to management.");
-      await refreshWorkspace();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not send message.");
     }
   }
 
@@ -594,16 +577,7 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
           <WorkspaceInfoPanel title={config.submitTitle || "Submit Designs"} text={config.submitText || "Design submission tools will appear here when configured."} />
         )}
 
-        {!loading && activeTab === "Messages" && (
-          <section className="developerPanel">
-            <h2>Messages</h2>
-            <form className="workspaceForm" onSubmit={sendMessage}>
-              <label>Message management<textarea value={message} onChange={(event) => setMessage(event.target.value)} rows={4} placeholder="Write a project question or update..." /></label>
-              <button type="submit">Send Message</button>
-            </form>
-            {overview?.messages.length ? overview.messages.map((item) => <p className="messageRow" key={item.id}><strong>{item.fromId}</strong>{item.body}<span>{formatDate(item.createdAt)}</span></p>) : <EmptyState title="No messages yet" text="Management messages and project conversations will appear here." />}
-          </section>
-        )}
+        {!loading && activeTab === "Messages" && <WorkspaceMessenger user={user} onUnreadChange={refreshWorkspace} onNotify={addWorkspaceNotification} />}
 
         {!loading && activeTab === "Meetings" && (
           <section className="developerPanel">

@@ -1965,3 +1965,444 @@ a[role="button"] {
     animation: none;
   }
 }
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.secondaryHeaderButton {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid #d9e4f0;
+  border-radius: var(--radius);
+  background: #ffffff;
+  color: #142d4e;
+  font-size: 12px;
+  font-weight: 800;
+  transition:
+    background 200ms ease,
+    transform 200ms ease,
+    border-color 200ms ease;
+}
+
+.secondaryHeaderButton:hover {
+  border-color: #c9d8e8;
+  background: #edf3fa;
+  transform: translateY(-1px);
+}
+
+.adminMessengerSection {
+  width: min(1280px, 100%);
+  margin: 18px auto 0;
+}
+
+.messengerShell {
+  min-height: min(720px, calc(100vh - 160px));
+  height: min(760px, calc(100vh - 130px));
+  display: grid;
+  grid-template-columns: minmax(280px, 0.36fr) minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #eef2f6;
+  box-shadow: 0 14px 36px #1118270d;
+}
+
+.messengerSidebar,
+.messengerChatPane {
+  min-width: 0;
+  min-height: 0;
+}
+
+.messengerSidebar {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  border-right: 1px solid var(--line);
+  background: #ffffff;
+}
+
+.messengerTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px;
+}
+
+.messengerTitle p {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+}
+
+.messengerTitle h2 {
+  margin: 0;
+  color: #111111;
+  font-size: 26px;
+  letter-spacing: -0.7px;
+}
+
+.messengerTitle > span,
+.messengerConversationMeta b {
+  min-width: 22px;
+  min-height: 22px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #142d4e;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.messengerTitle > span:empty {
+  display: none;
+}
+
+.messengerSearch {
+  display: block;
+  padding: 0 18px 14px;
+}
+
+.messengerSearch input {
+  width: 100%;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #f7f9fb;
+  color: #111111;
+  padding: 0 14px;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.messengerSearch input:focus {
+  border-color: #142d4e;
+  box-shadow: 0 0 0 3px #edf3fa;
+}
+
+.messengerError,
+.messengerEmpty,
+.messengerListLabel {
+  margin: 0;
+  padding: 12px 18px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.messengerError {
+  color: #8a321e;
+}
+
+.messengerListLabel {
+  color: #142d4e;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+}
+
+.messengerConversationList {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 10px 12px;
+}
+
+.messengerConversationButton {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 72px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: #111111;
+  padding: 10px;
+  text-align: left;
+  transition:
+    background 200ms ease,
+    border-color 200ms ease,
+    transform 200ms ease;
+}
+
+.messengerConversationButton:hover,
+.messengerConversationButton[data-active="true"] {
+  border-color: #d9e4f0;
+  background: #edf3fa;
+  transform: translateY(-1px);
+}
+
+.messengerAvatar {
+  width: 42px;
+  height: 42px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #142d4e;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 850;
+  letter-spacing: .2px;
+}
+
+.messengerConversationText {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.messengerConversationText strong,
+.messengerChatHeader strong {
+  overflow: hidden;
+  color: #111111;
+  font-size: 14px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messengerConversationText small,
+.messengerChatHeader small,
+.messengerConversationMeta small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messengerConversationText em {
+  overflow: hidden;
+  color: #4b5563;
+  font-size: 12px;
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.messengerConversationMeta {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+}
+
+.messengerChatPane {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background: #f3f5f7;
+}
+
+.messengerChatHeader {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  background: #ffffff;
+}
+
+.messengerChatHeader div {
+  display: grid;
+  min-width: 0;
+}
+
+.messengerBackButton {
+  display: none;
+  min-height: 34px;
+  border: 1px solid #d9e4f0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #142d4e;
+  padding: 0 12px;
+  font-weight: 800;
+}
+
+.messengerMessages {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px;
+}
+
+.messengerBubbleRow {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.messengerBubbleRow[data-mine="true"] {
+  justify-content: flex-end;
+}
+
+.messengerBubble {
+  max-width: min(560px, 82%);
+  padding: 10px 12px 8px;
+  border: 1px solid #e1e7ee;
+  border-radius: 16px 16px 16px 4px;
+  background: #ffffff;
+  color: #111111;
+  box-shadow: 0 8px 20px #11182708;
+}
+
+.messengerBubbleRow[data-mine="true"] .messengerBubble {
+  border-color: #142d4e;
+  border-radius: 16px 16px 4px 16px;
+  background: #142d4e;
+  color: #ffffff;
+}
+
+.messengerBubble p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.messengerBubble span {
+  display: block;
+  margin-top: 5px;
+  color: #6b7280;
+  font-size: 11px;
+  text-align: right;
+}
+
+.messengerBubbleRow[data-mine="true"] .messengerBubble span {
+  color: #dbe7f5;
+}
+
+.messengerComposer {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px;
+  padding: 14px;
+  border-top: 1px solid var(--line);
+  background: #ffffff;
+}
+
+.messengerComposer textarea {
+  min-height: 42px;
+  max-height: 120px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: #f7f9fb;
+  color: #111111;
+  padding: 11px 14px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  outline: none;
+}
+
+.messengerComposer textarea:focus {
+  border-color: #142d4e;
+  box-shadow: 0 0 0 3px #edf3fa;
+}
+
+.messengerComposer button {
+  min-height: 42px;
+  border-radius: 999px;
+  border: 1px solid #142d4e;
+  background: #142d4e;
+  color: #ffffff;
+  padding: 0 14px;
+  font-weight: 800;
+}
+
+.messengerComposer button[disabled] {
+  border-color: #d9e4f0;
+  background: #f3f5f7;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.messengerNoChat {
+  display: grid;
+  place-content: center;
+  min-height: 100%;
+  padding: 28px;
+  text-align: center;
+}
+
+.messengerNoChat h2 {
+  margin: 0 0 8px;
+  font-size: 30px;
+}
+
+.messengerNoChat p {
+  margin: 0;
+  color: var(--muted);
+}
+
+@media (max-width: 900px) {
+  .messengerShell {
+    height: calc(100dvh - 120px);
+    min-height: 520px;
+    grid-template-columns: 1fr;
+  }
+
+  .messengerSidebar {
+    border-right: 0;
+  }
+
+  .messengerChatPane {
+    display: none;
+  }
+
+  .messengerShell[data-chat-open="true"] .messengerSidebar {
+    display: none;
+  }
+
+  .messengerShell[data-chat-open="true"] .messengerChatPane {
+    display: grid;
+  }
+
+  .messengerBackButton {
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .messengerShell {
+    height: calc(100dvh - 100px);
+    border-radius: 0;
+  }
+
+  .messengerTitle,
+  .messengerChatHeader,
+  .messengerMessages,
+  .messengerComposer {
+    padding-inline: 12px;
+  }
+
+  .messengerComposer {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .messengerComposer button[aria-label="Record voice message"] {
+    display: none;
+  }
+}
