@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   Clock,
@@ -6,12 +6,16 @@ import {
   FolderKanban,
   House,
   ListTodo,
+  Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   MessageSquare,
   Package,
   Palette,
   UserRound,
   Video,
   Wrench,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
@@ -252,6 +256,8 @@ function WorkspaceLogo() {
 export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: WorkspaceUser; onLogout: () => void }) {
   const config = EMPLOYEE_WORKSPACES[user.employeeId] || EMPLOYEE_WORKSPACES.AHMED;
   const [activeTab, setActiveTab] = useState<Tab>("Dashboard");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [overview, setOverview] = useState<WorkspaceOverview | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState("");
   const [message, setMessage] = useState("");
@@ -302,6 +308,11 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
   useEffect(() => {
     void refreshWorkspace();
   }, []);
+
+  function selectWorkspaceTab(tab: Tab) {
+    setActiveTab(tab);
+    setIsMobileSidebarOpen(false);
+  }
 
   async function updateTask(action: string, body: Record<string, unknown> = {}) {
     if (!selectedTask) return;
@@ -380,21 +391,57 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
   ];
 
   return (
-    <main className="developerWorkspacePage">
+    <main className="developerWorkspacePage" data-sidebar-collapsed={isSidebarCollapsed} data-sidebar-open={isMobileSidebarOpen}>
+      <button
+        type="button"
+        className="developerMobileMenu"
+        aria-label="Open workspace navigation"
+        aria-expanded={isMobileSidebarOpen}
+        onClick={() => setIsMobileSidebarOpen(true)}
+      >
+        <Menu aria-hidden="true" />
+        <span>Menu</span>
+      </button>
+      <button
+        type="button"
+        className="developerSidebarScrim"
+        aria-label="Close workspace navigation"
+        tabIndex={isMobileSidebarOpen ? 0 : -1}
+        onClick={() => setIsMobileSidebarOpen(false)}
+      />
       <aside className="developerSidebar">
-        <div className="developerBrand">
-          <WorkspaceLogo />
-          <div>
-            <strong>BlueMind Workspace</strong>
-            <span>{config.sidebarLabel}</span>
+        <div className="developerSidebarTop">
+          <div className="developerBrand">
+            <WorkspaceLogo />
+            <div>
+              <strong>BlueMind Workspace</strong>
+              <span>{config.sidebarLabel}</span>
+            </div>
           </div>
+          <button
+            type="button"
+            className="developerSidebarToggle developerDesktopToggle"
+            aria-label={isSidebarCollapsed ? "Expand workspace navigation" : "Collapse workspace navigation"}
+            aria-expanded={!isSidebarCollapsed}
+            onClick={() => setIsSidebarCollapsed((value) => !value)}
+          >
+            {isSidebarCollapsed ? <PanelLeftOpen aria-hidden="true" /> : <PanelLeftClose aria-hidden="true" />}
+          </button>
+          <button
+            type="button"
+            className="developerSidebarToggle developerMobileClose"
+            aria-label="Close workspace navigation"
+            onClick={() => setIsMobileSidebarOpen(false)}
+          >
+            <X aria-hidden="true" />
+          </button>
         </div>
         <nav className="developerNav" aria-label={`${user.displayName} workspace sections`}>
           {config.tabs.map((tab) => {
             const Icon = WORKSPACE_NAV_ICONS[tab] ?? House;
 
             return (
-              <button key={tab} type="button" data-active={activeTab === tab} onClick={() => setActiveTab(tab)}>
+              <button key={tab} type="button" data-active={activeTab === tab} onClick={() => selectWorkspaceTab(tab)} title={tab}>
                 <Icon aria-hidden="true" />
                 <span>{tab}</span>
               </button>
