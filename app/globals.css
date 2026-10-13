@@ -1760,6 +1760,199 @@ a[role="button"] {
   box-shadow: 0 0 0 4px #142d4e12;
 }
 
+.profilePanel {
+  gap: 18px;
+}
+
+.panelIntro {
+  display: grid;
+  gap: 4px;
+}
+
+.panelIntro p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.profileHero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #f8fbff;
+}
+
+.profileAvatarLarge {
+  width: 84px;
+  height: 84px;
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid #d9e4f0;
+  border-radius: 50%;
+  background: #142d4e;
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 850;
+}
+
+.profileAvatarLarge img,
+.messengerAvatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.profileHero h3,
+.profileSection h3,
+.profileSettingCard h4 {
+  margin: 0;
+  color: #111111;
+}
+
+.profileHero h3 {
+  font-size: 24px;
+  letter-spacing: -0.5px;
+}
+
+.profileHero p,
+.profileHero span {
+  display: block;
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.profileStatusPill {
+  justify-self: end;
+  padding: 7px 10px;
+  border: 1px solid #cfe0d5;
+  border-radius: 999px;
+  background: #eef8f1;
+  color: #25523a;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.profileSection {
+  display: grid;
+  gap: 12px;
+}
+
+.profileSettingsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.profileSettingCard {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+}
+
+.profileSettingCard p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.profileSettingCard label,
+.profileUpload {
+  display: grid;
+  gap: 7px;
+  color: #111111;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.profileSettingCard input,
+.profileSettingCard select {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  color: #111111;
+  padding: 0 11px;
+  outline: none;
+}
+
+.profileSettingCard input:focus,
+.profileSettingCard select:focus {
+  border-color: #142d4e;
+  box-shadow: 0 0 0 4px #142d4e12;
+}
+
+.profileUpload {
+  width: fit-content;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border: 1px solid #142d4e;
+  border-radius: var(--radius);
+  background: #ffffff;
+  color: #142d4e;
+  cursor: pointer;
+}
+
+.profileUpload:hover {
+  background: #edf3fa;
+}
+
+.profileUpload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.profileActionRow,
+.profileLogoutRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.profileToggle {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+.profileToggle input {
+  width: 18px;
+  min-height: 18px;
+  accent-color: #142d4e;
+}
+
+.profileLogoutRow {
+  justify-content: flex-end;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+
+.developerPanel button:disabled,
+.workspaceForm button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+  transform: none;
+}
+
 .projectCard,
 .fileRow,
 .messageRow,
@@ -2235,9 +2428,19 @@ a[role="button"] {
   .developerMetricGrid.compact,
   .developerTwoColumn,
   .toolsGrid,
+  .profileSettingsGrid,
   .taskSummary dl,
   .profileGrid {
     grid-template-columns: 1fr;
+  }
+
+  .profileHero {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+
+  .profileStatusPill {
+    justify-self: start;
   }
 }
 

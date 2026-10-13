@@ -36,6 +36,7 @@ type WorkspaceUser = {
   displayName: string;
   title?: string;
   requiresPasswordChange?: boolean;
+  profilePhotoUrl?: string;
 };
 
 type WorkspaceTask = {
@@ -126,6 +127,19 @@ type WorkspaceTool = {
   downloadUrl?: string;
   workAccountEmail?: string;
   enabled?: boolean;
+};
+
+type WorkspaceProfile = WorkspaceUser & {
+  accountStatus: string;
+  preferredLanguage: "English" | "Swedish" | "Arabic";
+  timezone: string;
+  notifications: {
+    messages: boolean;
+    meetings: boolean;
+    security: boolean;
+  };
+  permissions: string[];
+  profilePhotoUrl: string;
 };
 
 const API_URL =
@@ -295,6 +309,15 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
   const [toolsLoading, setToolsLoading] = useState(false);
   const [toolsLoaded, setToolsLoaded] = useState(false);
   const [toolsError, setToolsError] = useState("");
+  const [profile, setProfile] = useState<WorkspaceProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [profileNotice, setProfileNotice] = useState("");
+  const [profilePhotoDraft, setProfilePhotoDraft] = useState<{ imageData: string; mimeType: string; fileName: string } | null>(null);
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [profileLanguage, setProfileLanguage] = useState<WorkspaceProfile["preferredLanguage"]>("English");
+  const [profileNotifications, setProfileNotifications] = useState({ messages: true, meetings: true, security: true });
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -344,6 +367,121 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
     }
   }
 
+  function applyProfile(nextProfile: WorkspaceProfile) {
+    setProfile(nextProfile);
+    setProfileLanguage(nextProfile.preferredLanguage || "English");
+    setProfileNotifications({
+      messages: Boolean(nextProfile.notifications?.messages),
+      meetings: Boolean(nextProfile.notifications?.meetings),
+      security: true,
+    });
+  }
+
+  async function loadProfile() {
+    setProfileLoading(true);
+    setProfileLoaded(true);
+    setProfileError("");
+    try {
+      const data = await workspaceFetch<{ profile: WorkspaceProfile }>("/api/workspace/profile");
+      applyProfile(data.profile);
+    } catch {
+      setProfileError("Unable to load your profile. Please try again.");
+    } finally {
+      setProfileLoading(false);
+    }
+  }
+
+  function handleProfilePhotoSelection(file?: File | null) {
+    setProfileError("");
+    setProfileNotice("");
+    if (!file) {
+      setProfilePhotoDraft(null);
+      return;
+    }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setProfileError("Use a JPG, PNG, or WebP image.");
+      return;
+    }
+    if (file.size > 300 * 1024) {
+      setProfileError("Profile photo must be 300 KB or smaller.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setProfilePhotoDraft({ imageData: reader.result, mimeType: file.type, fileName: file.name });
+      }
+    };
+    reader.onerror = () => setProfileError("Could not preview that image.");
+    reader.readAsDataURL(file);
+  }
+
+  async function saveProfilePhoto() {
+    if (!profilePhotoDraft) return;
+    setProfileError("");
+    setProfileNotice("");
+    try {
+      const data = await workspaceFetch<{ profile: WorkspaceProfile }>("/api/workspace/profile/photo", {
+        method: "POST",
+        body: JSON.stringify(profilePhotoDraft),
+      });
+      applyProfile(data.profile);
+      setProfilePhotoDraft(null);
+      setProfileNotice("Profile photo updated.");
+    } catch (err) {
+      setProfileError(err instanceof Error ? err.message : "Could not update profile photo.");
+    }
+  }
+
+  async function removeProfilePhoto() {
+    setProfileError("");
+    setProfileNotice("");
+    try {
+      const data = await workspaceFetch<{ profile: WorkspaceProfile }>("/api/workspace/profile/photo", { method: "DELETE" });
+      applyProfile(data.profile);
+      setProfilePhotoDraft(null);
+      setProfileNotice("Profile photo removed.");
+    } catch (err) {
+      setProfileError(err instanceof Error ? err.message : "Could not remove profile photo.");
+    }
+  }
+
+  async function saveProfilePreferences() {
+    setProfileError("");
+    setProfileNotice("");
+    try {
+      const data = await workspaceFetch<{ profile: WorkspaceProfile }>("/api/workspace/profile", {
+        method: "PATCH",
+        body: JSON.stringify({ preferredLanguage: profileLanguage, notifications: profileNotifications }),
+      });
+      applyProfile(data.profile);
+      setProfileNotice("Profile preferences saved.");
+    } catch (err) {
+      setProfileError(err instanceof Error ? err.message : "Could not save profile preferences.");
+    }
+  }
+
+  async function changeProfilePassword(event: FormEvent) {
+    event.preventDefault();
+    setProfileError("");
+    setProfileNotice("");
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setProfileError("New passwords do not match.");
+      return;
+    }
+    try {
+      const data = await workspaceFetch<{ profile: WorkspaceProfile }>("/api/workspace/profile/password", {
+        method: "POST",
+        body: JSON.stringify({ currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword }),
+      });
+      applyProfile(data.profile);
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setProfileNotice("Password updated securely.");
+    } catch (err) {
+      setProfileError(err instanceof Error ? err.message : "Could not update password.");
+    }
+  }
+
   useEffect(() => {
     if (!config.tabs.includes(activeTab)) setActiveTab("Dashboard");
   }, [activeTab, config.tabs]);
@@ -357,6 +495,12 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
       void loadTools();
     }
   }, [activeTab, loading, toolsLoaded, toolsLoading]);
+
+  useEffect(() => {
+    if (!loading && activeTab === "My Profile" && !profileLoaded && !profileLoading) {
+      void loadProfile();
+    }
+  }, [activeTab, loading, profileLoaded, profileLoading]);
 
   function selectWorkspaceTab(tab: Tab) {
     setActiveTab(tab);
@@ -661,21 +805,186 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
         )}
 
         {!loading && activeTab === "My Profile" && (
-          <section className="developerPanel">
-            <h2>My Profile</h2>
-            <dl className="profileGrid">
-              <div><dt>Full name</dt><dd>{user.displayName}</dd></div>
-              <div><dt>Job role</dt><dd>{config.role}</dd></div>
-              <div><dt>Work email</dt><dd>{user.email}</dd></div>
-              <div><dt>Preferred language</dt><dd>English</dd></div>
-              <div><dt>Account settings</dt><dd>Managed by BlueMind Workspace</dd></div>
-              <div><dt>Change password</dt><dd>Password reset is handled securely by management for this test account.</dd></div>
-            </dl>
-            <button type="button" onClick={onLogout}>Logout</button>
-          </section>
+          <ProfilePanel
+            fallbackUser={user}
+            profile={profile}
+            loading={profileLoading}
+            error={profileError}
+            notice={profileNotice}
+            photoDraft={profilePhotoDraft}
+            passwordForm={passwordForm}
+            language={profileLanguage}
+            notifications={profileNotifications}
+            onRetry={() => void loadProfile()}
+            onPhotoChange={handleProfilePhotoSelection}
+            onPhotoSave={() => void saveProfilePhoto()}
+            onPhotoRemove={() => void removeProfilePhoto()}
+            onPasswordChange={changeProfilePassword}
+            onPasswordFormChange={setPasswordForm}
+            onLanguageChange={setProfileLanguage}
+            onNotificationsChange={setProfileNotifications}
+            onPreferencesSave={() => void saveProfilePreferences()}
+            onLogout={onLogout}
+          />
         )}
       </section>
     </main>
+  );
+}
+
+function ProfileAvatar({ profile, draft }: { profile: WorkspaceProfile | WorkspaceUser; draft?: { imageData: string } | null }) {
+  const photoUrl = draft?.imageData || profile.profilePhotoUrl || "";
+  const initials = String(profile.displayName || "BM")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || "")
+    .join("") || "BM";
+
+  return (
+    <span className="profileAvatarLarge">
+      {photoUrl ? <img src={photoUrl} alt="" /> : initials}
+    </span>
+  );
+}
+
+function ProfilePanel({
+  fallbackUser,
+  profile,
+  loading,
+  error,
+  notice,
+  photoDraft,
+  passwordForm,
+  language,
+  notifications,
+  onRetry,
+  onPhotoChange,
+  onPhotoSave,
+  onPhotoRemove,
+  onPasswordChange,
+  onPasswordFormChange,
+  onLanguageChange,
+  onNotificationsChange,
+  onPreferencesSave,
+  onLogout,
+}: {
+  fallbackUser: WorkspaceUser;
+  profile: WorkspaceProfile | null;
+  loading: boolean;
+  error: string;
+  notice: string;
+  photoDraft: { imageData: string; mimeType: string; fileName: string } | null;
+  passwordForm: { currentPassword: string; newPassword: string; confirmPassword: string };
+  language: WorkspaceProfile["preferredLanguage"];
+  notifications: WorkspaceProfile["notifications"];
+  onRetry: () => void;
+  onPhotoChange: (file?: File | null) => void;
+  onPhotoSave: () => void;
+  onPhotoRemove: () => void;
+  onPasswordChange: (event: FormEvent) => void;
+  onPasswordFormChange: (next: { currentPassword: string; newPassword: string; confirmPassword: string }) => void;
+  onLanguageChange: (language: WorkspaceProfile["preferredLanguage"]) => void;
+  onNotificationsChange: (next: WorkspaceProfile["notifications"]) => void;
+  onPreferencesSave: () => void;
+  onLogout: () => void;
+}) {
+  const current = profile || {
+    ...fallbackUser,
+    accountStatus: "Active",
+    preferredLanguage: "English" as const,
+    timezone: "Europe/Stockholm",
+    notifications: { messages: true, meetings: true, security: true },
+    permissions: [],
+    profilePhotoUrl: fallbackUser.profilePhotoUrl || "",
+  };
+
+  return (
+    <section className="developerPanel profilePanel">
+      <div className="panelIntro">
+        <h2>My Profile</h2>
+        <p>Manage your BlueMind Workspace account.</p>
+      </div>
+
+      {loading && <EmptyState title="Loading profile" text="Fetching your secure account information." />}
+      {error && <p className="workspaceError" role="alert">{error}</p>}
+      {notice && <p className="workspaceNotice">{notice}</p>}
+      {!loading && !profile && error && <button type="button" className="secondaryAction" onClick={onRetry}>Retry</button>}
+
+      <div className="profileHero">
+        <ProfileAvatar profile={current} draft={photoDraft} />
+        <div>
+          <h3>{current.displayName}</h3>
+          <p>{current.title || "BlueMind Workspace"}</p>
+          <span>{current.email}</span>
+        </div>
+        <strong className="profileStatusPill">{current.accountStatus || "Active"}</strong>
+      </div>
+
+      <section className="profileSection">
+        <h3>Personal Information</h3>
+        <dl className="profileGrid">
+          <div><dt>Full Name</dt><dd>{current.displayName}</dd></div>
+          <div><dt>Job Role</dt><dd>{current.title}</dd></div>
+          <div><dt>Work Email</dt><dd>{current.email}</dd></div>
+          <div><dt>Account Status</dt><dd>{current.accountStatus || "Active"}</dd></div>
+        </dl>
+        <p className="workspaceHelp">Role, company email, and permissions are managed by BlueMind administrators.</p>
+      </section>
+
+      <section className="profileSection">
+        <h3>Account Settings</h3>
+        <div className="profileSettingsGrid">
+          <article className="profileSettingCard">
+            <h4>Profile Photo</h4>
+            <p>Upload a JPG, PNG, or WebP image up to 300 KB. Your photo appears in Workspace and Messenger.</p>
+            <label className="profileUpload">
+              Choose image
+              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => onPhotoChange(event.target.files?.[0])} />
+            </label>
+            <div className="profileActionRow">
+              <button type="button" onClick={onPhotoSave} disabled={!photoDraft}>Save Photo</button>
+              <button type="button" className="secondaryAction" onClick={onPhotoRemove} disabled={!current.profilePhotoUrl && !photoDraft}>Remove Photo</button>
+            </div>
+          </article>
+
+          <form className="profileSettingCard" onSubmit={onPasswordChange}>
+            <h4>Password & Security</h4>
+            <p>Change your password using your current password. Stored passwords are never displayed.</p>
+            <label>Current password<input type="password" value={passwordForm.currentPassword} onChange={(event) => onPasswordFormChange({ ...passwordForm, currentPassword: event.target.value })} autoComplete="current-password" /></label>
+            <label>New password<input type="password" value={passwordForm.newPassword} onChange={(event) => onPasswordFormChange({ ...passwordForm, newPassword: event.target.value })} autoComplete="new-password" /></label>
+            <label>Confirm new password<input type="password" value={passwordForm.confirmPassword} onChange={(event) => onPasswordFormChange({ ...passwordForm, confirmPassword: event.target.value })} autoComplete="new-password" /></label>
+            <button type="submit">Update Password</button>
+          </form>
+
+          <article className="profileSettingCard">
+            <h4>Language</h4>
+            <p>Language preference is prepared for future Workspace localization.</p>
+            <label>Current language
+              <select value={language} onChange={(event) => onLanguageChange(event.target.value as WorkspaceProfile["preferredLanguage"])}>
+                <option>English</option>
+                <option>Swedish</option>
+                <option>Arabic</option>
+              </select>
+            </label>
+            <button type="button" className="secondaryAction" onClick={onPreferencesSave}>Save Preference</button>
+          </article>
+
+          <article className="profileSettingCard">
+            <h4>Notifications</h4>
+            <p>Choose optional Workspace notifications. Security notifications stay enabled.</p>
+            <label className="profileToggle"><input type="checkbox" checked={notifications.messages} onChange={(event) => onNotificationsChange({ ...notifications, messages: event.target.checked, security: true })} /> Message notifications</label>
+            <label className="profileToggle"><input type="checkbox" checked={notifications.meetings} onChange={(event) => onNotificationsChange({ ...notifications, meetings: event.target.checked, security: true })} /> Meeting notifications</label>
+            <label className="profileToggle"><input type="checkbox" checked readOnly /> Essential security notifications</label>
+            <button type="button" className="secondaryAction" onClick={onPreferencesSave}>Save Notifications</button>
+          </article>
+        </div>
+      </section>
+
+      <div className="profileLogoutRow">
+        <button type="button" onClick={onLogout}>Logout</button>
+      </div>
+    </section>
   );
 }
 

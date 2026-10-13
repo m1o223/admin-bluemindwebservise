@@ -8,6 +8,7 @@ type WorkspaceUser = {
   displayName: string;
   title?: string;
   access?: "admin" | "employee";
+  profilePhotoUrl?: string;
 };
 
 type MessengerContact = {
@@ -15,6 +16,7 @@ type MessengerContact = {
   displayName: string;
   title: string;
   initials: string;
+  profilePhotoUrl?: string;
 };
 
 type MessengerConversation = {
@@ -64,6 +66,14 @@ async function messengerFetch<T>(path: string, init?: RequestInit) {
   const data = (await response.json().catch(() => ({}))) as T & { error?: string };
   if (!response.ok) throw new Error(data.error || "Messenger request failed.");
   return data;
+}
+
+function MessengerAvatar({ contact }: { contact: Pick<MessengerContact, "displayName" | "initials" | "profilePhotoUrl"> }) {
+  return (
+    <span className="messengerAvatar">
+      {contact.profilePhotoUrl ? <img src={contact.profilePhotoUrl} alt="" /> : contact.initials}
+    </span>
+  );
 }
 
 export function WorkspaceMessenger({
@@ -258,7 +268,7 @@ export function WorkspaceMessenger({
               key={conversation.conversationId}
               onClick={() => openConversation(conversation)}
             >
-              <span className="messengerAvatar">{conversation.contact.initials}</span>
+              <MessengerAvatar contact={conversation.contact} />
               <span className="messengerConversationText">
                 <strong>{conversation.contact.displayName}</strong>
                 <small>{conversation.contact.title}</small>
@@ -273,7 +283,7 @@ export function WorkspaceMessenger({
           {!loading && filteredContacts.length > 0 && <p className="messengerListLabel">Start a conversation</p>}
           {!loading && filteredContacts.map((contact) => (
             <button type="button" className="messengerConversationButton" key={contact.employeeId} onClick={() => startConversation(contact)}>
-              <span className="messengerAvatar">{contact.initials}</span>
+              <MessengerAvatar contact={contact} />
               <span className="messengerConversationText">
                 <strong>{contact.displayName}</strong>
                 <small>{contact.title}</small>
@@ -290,7 +300,7 @@ export function WorkspaceMessenger({
           <>
             <header className="messengerChatHeader">
               <button type="button" className="messengerBackButton" onClick={() => setMobileChatOpen(false)}>Back</button>
-              <span className="messengerAvatar">{selectedConversation.contact.initials}</span>
+              <MessengerAvatar contact={selectedConversation.contact} />
               <div>
                 <strong>{selectedConversation.contact.displayName}</strong>
                 <small>{selectedConversation.contact.title}</small>
