@@ -15,13 +15,18 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   MessageSquare,
+  Mic,
+  MicOff,
   Languages,
   LogOut,
   ShieldCheck,
+  PhoneOff,
+  ScreenShare,
   UserRound,
   UsersRound,
   Utensils,
   Video,
+  VideoOff,
   Wrench,
   X,
   type LucideIcon,
@@ -1033,21 +1038,115 @@ const DEMO_MEETING = {
   status: "Scheduled",
 } as const;
 
+const DEMO_MEETING_PARTICIPANTS = [
+  { name: "Mohammed", initials: "MO", muted: false, active: true },
+  { name: "Rokaia", initials: "RO", muted: true, active: false },
+  { name: "Ahmed", initials: "AH", muted: false, active: false },
+  { name: "Patrick Jane", initials: "PJ", muted: true, active: false },
+] as const;
+
 function MeetingsPanel() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isMicOn, setIsMicOn] = useState(false);
+  const [isCameraOn, setIsCameraOn] = useState(false);
+  const [isSharingScreen, setIsSharingScreen] = useState(false);
+  const [activeSidePanel, setActiveSidePanel] = useState<"participants" | "chat" | null>(null);
 
   if (isPreviewOpen) {
     return (
-      <section className="developerPanel meetingsPanel">
-        <button type="button" className="secondaryAction meetingBackButton" onClick={() => setIsPreviewOpen(false)}>
-          Back
-        </button>
-        <div className="meetingPreviewScreen">
-          <span className="meetingDemoLabel">Demo meeting preview</span>
-          <Video aria-hidden="true" />
-          <h2>{DEMO_MEETING.title}</h2>
+      <section className="meetingRoom" aria-label="BlueMind demo meeting room">
+        <header className="meetingRoomHeader">
+          <div>
+            <span>Demo meeting room</span>
+            <h2>{DEMO_MEETING.title}</h2>
+          </div>
           <p>Meeting Preview — Not Connected</p>
-          <small>No camera, microphone, video call, or backend meeting connection has been started.</small>
+        </header>
+
+        <div className="meetingRoomStage" data-panel-open={activeSidePanel ? "true" : "false"}>
+          <div className="meetingParticipantGrid" data-count={DEMO_MEETING_PARTICIPANTS.length}>
+            {DEMO_MEETING_PARTICIPANTS.map((participant) => (
+              <article className="meetingParticipantTile" data-active={participant.active} key={participant.name}>
+                <div className="meetingParticipantAvatar">{participant.initials}</div>
+                <div className="meetingParticipantMeta">
+                  <strong>{participant.name}</strong>
+                  <span>{participant.muted ? <MicOff aria-hidden="true" /> : <Mic aria-hidden="true" />} {participant.muted ? "Muted" : "Mic on"}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          {activeSidePanel && (
+            <aside className="meetingSidePanel" aria-label={activeSidePanel === "participants" ? "Meeting participants" : "Meeting chat"}>
+              <button type="button" className="meetingPanelClose" aria-label="Close meeting side panel" onClick={() => setActiveSidePanel(null)}>
+                <X aria-hidden="true" />
+              </button>
+              {activeSidePanel === "participants" ? (
+                <div className="meetingPanelContent">
+                  <span className="meetingDemoLabel">Demo participants</span>
+                  <h3>Participants</h3>
+                  <ul className="meetingParticipantList">
+                    {DEMO_MEETING_PARTICIPANTS.map((participant) => (
+                      <li key={participant.name}>
+                        <span>{participant.initials}</span>
+                        <strong>{participant.name}</strong>
+                        {participant.muted ? <MicOff aria-label="Muted" /> : <Mic aria-label="Microphone on" />}
+                      </li>
+                    ))}
+                  </ul>
+                  <label className="meetingAddParticipant">
+                    Add participant
+                    <input type="text" placeholder="Visual test only" />
+                  </label>
+                  <p>No invitation is sent. This panel is only for frontend design testing.</p>
+                </div>
+              ) : (
+                <div className="meetingPanelContent">
+                  <span className="meetingDemoLabel">Demo chat</span>
+                  <h3>Meeting Chat</h3>
+                  <div className="meetingChatDemo">
+                    <p><strong>Mohammed</strong><span>Welcome everyone. This is a frontend-only preview.</span></p>
+                    <p><strong>Ahmed</strong><span>The meeting room layout is ready for design review.</span></p>
+                  </div>
+                  <div className="meetingChatInput" aria-label="Demo chat input">
+                    <input type="text" placeholder="Demo chat only" />
+                    <button type="button" aria-label="Demo send disabled">Send</button>
+                  </div>
+                  <p>Messages are not saved and are not connected to BlueMind Messenger.</p>
+                </div>
+              )}
+            </aside>
+          )}
+        </div>
+
+        <div className="meetingControlBar" aria-label="Demo meeting controls">
+          <button type="button" data-active={isMicOn} onClick={() => setIsMicOn((value) => !value)}>
+            {isMicOn ? <Mic aria-hidden="true" /> : <MicOff aria-hidden="true" />}
+            <span>{isMicOn ? "Mic Demo On" : "Mic Demo Off"}</span>
+          </button>
+          <button type="button" data-active={isCameraOn} onClick={() => setIsCameraOn((value) => !value)}>
+            {isCameraOn ? <Video aria-hidden="true" /> : <VideoOff aria-hidden="true" />}
+            <span>{isCameraOn ? "Camera Demo On" : "Camera Demo Off"}</span>
+          </button>
+          <button type="button" data-active={isSharingScreen} onClick={() => setIsSharingScreen((value) => !value)}>
+            <ScreenShare aria-hidden="true" />
+            <span>{isSharingScreen ? "Sharing Demo" : "Share Screen"}</span>
+          </button>
+          <button type="button" data-active={activeSidePanel === "participants"} onClick={() => setActiveSidePanel((panel) => panel === "participants" ? null : "participants")}>
+            <UsersRound aria-hidden="true" />
+            <span>Participants</span>
+          </button>
+          <button type="button" data-active={activeSidePanel === "chat"} onClick={() => setActiveSidePanel((panel) => panel === "chat" ? null : "chat")}>
+            <MessageSquare aria-hidden="true" />
+            <span>Meeting Chat</span>
+          </button>
+          <button type="button" className="meetingLeaveButton" onClick={() => {
+            setActiveSidePanel(null);
+            setIsPreviewOpen(false);
+          }}>
+            <PhoneOff aria-hidden="true" />
+            <span>Leave Meeting</span>
+          </button>
         </div>
       </section>
     );
