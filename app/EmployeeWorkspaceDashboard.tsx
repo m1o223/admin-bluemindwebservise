@@ -5,6 +5,7 @@ import {
   Bell,
   Camera,
   ChevronDown,
+  Clock,
   Coffee,
   FileText,
   House,
@@ -694,10 +695,7 @@ export function EmployeeWorkspaceDashboard({ user, onLogout }: { user: Workspace
         {!loading && activeTab === "Messages" && <WorkspaceMessenger user={user} onUnreadChange={refreshWorkspace} onNotify={addWorkspaceNotification} />}
 
         {!loading && activeTab === "Meetings" && (
-          <section className="developerPanel">
-            <h2>Meetings</h2>
-            {overview?.meetings.length ? overview.meetings.map((meeting) => <MeetingCard meeting={meeting} key={meeting.id} />) : <EmptyState title="No upcoming meetings" text="Scheduled video check-ins will appear here. Cameras and microphones are never activated automatically." />}
-          </section>
+          <MeetingsPanel />
         )}
 
         {!loading && activeTab === "My Schedule" && <MySchedulePanel />}
@@ -1026,8 +1024,81 @@ function ProjectCard({ project }: { project: WorkspaceProject }) {
   return <article className="projectCard"><h3>{project.name}</h3><p>{project.description || "No description added yet."}</p><span>{project.developmentStatus}</span><p>{project.managerNotes || "No manager notes yet."}</p></article>;
 }
 
-function MeetingCard({ meeting }: { meeting: WorkspaceMeeting }) {
-  return <article className="projectCard"><h3>{meeting.purpose}</h3><p>{formatDate(meeting.startsAt)}</p><p>{meeting.participants.join(", ") || "Participants not listed"}</p>{meeting.joinUrl ? <a href={meeting.joinUrl} target="_blank" rel="noreferrer">Join Meeting</a> : <span>Join link not added yet</span>}</article>;
+const DEMO_MEETING = {
+  title: "Team Meeting",
+  date: "Tomorrow",
+  time: "7:30 PM",
+  duration: "30 minutes",
+  participants: ["Mohammed", "Rokaia", "Ahmed", "Ammar", "Patrick Jane"],
+  status: "Scheduled",
+} as const;
+
+function MeetingsPanel() {
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  if (isPreviewOpen) {
+    return (
+      <section className="developerPanel meetingsPanel">
+        <button type="button" className="secondaryAction meetingBackButton" onClick={() => setIsPreviewOpen(false)}>
+          Back
+        </button>
+        <div className="meetingPreviewScreen">
+          <span className="meetingDemoLabel">Demo meeting preview</span>
+          <Video aria-hidden="true" />
+          <h2>{DEMO_MEETING.title}</h2>
+          <p>Meeting Preview — Not Connected</p>
+          <small>No camera, microphone, video call, or backend meeting connection has been started.</small>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="developerPanel meetingsPanel">
+      <div className="panelIntro">
+        <h2>Meetings</h2>
+        <p>Frontend-only meeting design preview.</p>
+      </div>
+
+      <article className="meetingDemoCard" aria-label={`${DEMO_MEETING.title} demo meeting`}>
+        <div className="meetingDemoHeader">
+          <div>
+            <span className="meetingDemoLabel">Demo meeting</span>
+            <h3>{DEMO_MEETING.title}</h3>
+          </div>
+          <span className="meetingStatusPill">{DEMO_MEETING.status}</span>
+        </div>
+
+        <dl className="meetingDetailsGrid">
+          <div>
+            <CalendarDays aria-hidden="true" />
+            <dt>Date</dt>
+            <dd>{DEMO_MEETING.date}</dd>
+          </div>
+          <div>
+            <Clock aria-hidden="true" />
+            <dt>Time</dt>
+            <dd>{DEMO_MEETING.time}</dd>
+          </div>
+          <div>
+            <Video aria-hidden="true" />
+            <dt>Duration</dt>
+            <dd>{DEMO_MEETING.duration}</dd>
+          </div>
+          <div>
+            <UsersRound aria-hidden="true" />
+            <dt>Participants</dt>
+            <dd>{DEMO_MEETING.participants.join(", ")}</dd>
+          </div>
+        </dl>
+
+        <div className="meetingDemoFooter">
+          <p>This is temporary frontend-only demo data. No invitations, notifications, or real meeting records are created.</p>
+          <button type="button" onClick={() => setIsPreviewOpen(true)}>Join Meeting</button>
+        </div>
+      </article>
+    </section>
+  );
 }
 
 function WorkspaceInfoPanel({ title, text }: { title: string; text: string }) {
