@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { EmployeeWorkspaceDashboard } from "./EmployeeWorkspaceDashboard";
+import { EmployeeWorkspaceDashboard, MeetingsPanel } from "./EmployeeWorkspaceDashboard";
+import { AdminWorkspace, AdminOverview, AdminPlaceholder, type AdminSection } from "./AdminWorkspace";
 import { WorkspaceMessenger } from "./WorkspaceMessenger";
 import { type WorkspaceNotification, WorkspaceNotificationCenter } from "./WorkspaceNotificationCenter";
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
@@ -573,7 +574,7 @@ export default function Home() {
   const [submittingLogin, setSubmittingLogin] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [notifications, setNotifications] = useState<WorkspaceNotification[]>([]);
-  const [adminMessengerOpen, setAdminMessengerOpen] = useState(false);
+  const [adminSection, setAdminSection] = useState<AdminSection>("Dashboard");
   const [directOrderOpened, setDirectOrderOpened] = useState(false);
   const isAdminUser = admin?.access !== "employee";
 
@@ -706,6 +707,7 @@ export default function Home() {
     if (!signedIn || !isAdminUser || directOrderOpened) return;
     const orderParam = new URLSearchParams(window.location.search).get("order");
     if (!orderParam) return;
+    setAdminSection("Orders");
     setSearch(orderParam);
     const match = orders.find((order) => order.orderNumber === orderParam || order.orderNumber === `#${orderParam.replace(/^#/, "")}`);
     if (match) {
@@ -751,6 +753,7 @@ export default function Home() {
       const user = data.employee || data.admin || null;
       setAdmin(user);
       setSignedIn(true);
+      setAdminSection("Dashboard");
       setPassword("");
       addWorkspaceNotification({ title: `Welcome back, ${user?.displayName || "there"}!` });
       if (user?.access !== "employee") {
@@ -782,7 +785,7 @@ export default function Home() {
     setSearch("");
     setPresence(DEFAULT_PRESENCE);
     setNotifications([]);
-    setAdminMessengerOpen(false);
+    setAdminSection("Dashboard");
   }
 
   async function openOrderDetails(order: Order) {
@@ -997,21 +1000,27 @@ export default function Home() {
     return <EmployeeWorkspaceDashboard user={admin} onLogout={handleLogout} />;
   }
 
+  function navigateAdmin(section: AdminSection) {
+    setAdminSection(section);
+  }
+
   return (
-    <main className="dashboardPage" id="orders">
+    <AdminWorkspace section={adminSection} onNavigate={navigateAdmin} name={admin?.displayName || "Administrator"} onLogout={handleLogout}>
       <WorkspaceNotificationCenter notifications={notifications} onDismiss={(id) => setNotifications((current) => current.filter((item) => item.id !== id))} />
+      {adminSection === "Dashboard" && <AdminOverview apiUrl={API_URL} userId={admin?.employeeId || ""} onNavigate={navigateAdmin} />}
+      {adminSection === "Messages" && admin && <WorkspaceMessenger user={admin} onNotify={addWorkspaceNotification} />}
+      {adminSection === "Meetings" && <MeetingsPanel />}
+      {!["Dashboard", "Orders", "Messages", "Meetings"].includes(adminSection) && <AdminPlaceholder title={adminSection} />}
+      {adminSection === "Orders" && <div className="dashboardPage" id="orders">
       <header className="dashboardHeader">
         <div className="brandLockup">
           <BlueMindMark />
           <div>
             <strong>BlueMind Workspace</strong>
-            <span>Employee dashboard</span>
+            <span>Orders workspace</span>
           </div>
         </div>
         <div className="headerActions">
-          <button type="button" className="secondaryHeaderButton" onClick={() => setAdminMessengerOpen((open) => !open)}>
-            {adminMessengerOpen ? "Close Messenger" : "Messenger"}
-          </button>
           <section className="presenceBlock" aria-label="Employee presence">
             <span className="presenceTitle">Employees</span>
             <div className="presenceList">
@@ -1033,17 +1042,8 @@ export default function Home() {
               ))}
             </div>
           </section>
-          <button type="button" className="logoutButton" onClick={handleLogout}>
-            Logout
-          </button>
         </div>
       </header>
-
-      {adminMessengerOpen && admin && (
-        <section className="adminMessengerSection" aria-label="BlueMind Messenger">
-          <WorkspaceMessenger user={admin} onNotify={addWorkspaceNotification} />
-        </section>
-      )}
 
       <section className="dashboardHero">
         <div>
@@ -1112,6 +1112,7 @@ export default function Home() {
           <p>Try another order number, customer name, email, or company.</p>
         </section>
       )}
+      </div>}
 
       <DetailsDrawer
         order={selectedOrder}
@@ -1121,6 +1122,6 @@ export default function Home() {
         onRequestClarification={handleRequestClarification}
         onUpdateStatus={handleUpdateStatus}
       />
-    </main>
+    </AdminWorkspace>
   );
 }

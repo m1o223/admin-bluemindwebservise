@@ -1045,7 +1045,7 @@ const DEMO_MEETING_PARTICIPANTS = [
   { name: "Patrick Jane", initials: "PJ", muted: true, active: false },
 ] as const;
 
-function MeetingsPanel() {
+export function MeetingsPanel() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isMicOn, setIsMicOn] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(false);
